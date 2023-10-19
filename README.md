@@ -1,11 +1,14 @@
 # Database_comparator
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A program for searching and analyzing databases using various algorithms.
+The Database Comparator is a program designed for searching, 
+analyzing, and comparing databases using various algorithms. 
+It offers versatile functionalities such as exact matching, 
+sequence alignment, BLAST searches, and Hamming distance calculations. 
 
 ## Table of Contents
-- [Overview](#overview)
-- [Installation](#installation)
+- [Overview](#Overview)
+- [Installation](#Installation)
 - [Configuration file](#Configuration-file)
   - [Syntax of configuration file](#Syntax-of-config-file)
   - [Inserting configuration file to program](#Inserting-config-file-to-program)
@@ -14,23 +17,30 @@ A program for searching and analyzing databases using various algorithms.
   - [Aligner](#Aligner)
   - [BLAST](#BLAST)
   - [Hamming distances](#Hamming-distances)
+- [Example](#Example)
 
 ## Overview
 The program is for comparing and analyzing databases using various methods.
 
 It utilizes the provided configuration to perform exact matching, sequence alignment, 
-BLAST searches, and calculates Hamming distances between sequences. The class allows for exporting the results to 
-different file formats, such as Excel, CSV, and Markdown.
+BLAST searches, and calculates Hamming distances between sequences.
 
-Configuration of program is given by **config_file.txt**
+Configuration of program is given by **configuration file**
 
 ## Installation
+Use the following command to install the program:
 ```shell
-# Example installation command
-pip install Database_comparator
+pip install Database-comparator
 ```
 
 ## Configuration file
+The configuration file is used to adjust the program properly to the data that the user wants to analyze. The configuration 
+folder contains all the information from the database query and the databases 
+against which we want to compare the query. Optionally, internal parameters 
+for the Smith Waterman algorithm, BLAST, etc. can be set. 
+If these parameters are not specified, they will be set to the default value
+
+Example of configuration file:
 ```text
 # Databases
 QUERY HEDIMED__230620_Hedimed_1_22_basic--table_EF_predelana.xlsx part3
@@ -85,108 +95,145 @@ number_of_processors >number of processors for multprocessing(int)<
 ```python
 from Database_comparator import db_compare
 
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
 ```
 ## Usage
+The program provides several modules designed to specific analysis methods.
 ```python3
 from Database_comparator import db_compare
 
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
-
-# Modules
-db_exact_match = db.exact_match # Used fot exact match search
-db_aligner = db.aligner # Used for Smith Waterman algorithm
-db_blast = db.blast # Used for BLAST search
-db_hamming = db.hamming_distances # Used for finding Hamming distances between sequences
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  
+  # Modules
+  db_exact_match = db.exact_match # Used fot exact match search
+  db_aligner = db.aligner # Used for Smith Waterman algorithm
+  db_blast = db.blast # Used for BLAST search
+  db_hamming = db.hamming_distances # Used for finding Hamming distances between sequences
 ```
-
+**Database Comparator** allows for the export of results in 
+various file formats, including Excel, CSV, and Markdown, making it easy 
+to document findings.
 ```python3
 # Exporting results
 from Database_comparator import db_compare
 
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
-
-# Data computing....
-
-db.export_data_frame(output_file="Results.xlsx", data_format="xlsx")
-db.export_data_frame(output_file="Results.csv", data_format="csv")
-
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  
+  # Data computing....
+  
+  db.export_data_frame(output_file="Results.xlsx", data_format="xlsx")
+  db.export_data_frame(output_file="Results.csv", data_format="csv")
 ```
 ### Exact match
+The **exact_match** module is used to find exact matches between sequences 
+in the query database and data databases. It allows you to perform exact 
+match searches in single databases or across all configured databases. 
+Users can also take advantage of multiprocessing to expedite the process.
 ```python3
 from Database_comparator import db_compare
 
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
-
-# Program will search in single database for exact match with query database
-db.exact_match.exact_match_search_in_single_database(database_index=0)
-#Multiprocessing
-db.exact_match.exact_match_search_in_single_database(database_index=0, parallel=True)
-db.exact_match.exact_match_search_in_single_database_MULTIPROCESSING(database_index=0)
-# Program will search all given databases for exact match with query database
-db.exact_match.exact_match_search_in_all_databases()
-
-# User can also use multiprocessing
-db.exact_match.exact_match_search_in_all_databases(parallel=True)
-# or
-db.exact_match.exact_match_search_in_all_databases_MULTIPROCESSING()
-
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  
+  # Program will search in single database for exact match with query database
+  db.exact_match.exact_match_search_in_single_database(database_index=0)
+  #Multiprocessing
+  db.exact_match.exact_match_search_in_single_database(database_index=0, parallel=True)
+  db.exact_match.exact_match_search_in_single_database_MULTIPROCESSING(database_index=0)
+  # Program will search all given databases for exact match with query database
+  db.exact_match.exact_match_search_in_all_databases()
+  
+  # User can also use multiprocessing
+  db.exact_match.exact_match_search_in_all_databases(parallel=True)
+  # or
+  db.exact_match.exact_match_search_in_all_databases_MULTIPROCESSING()
 ```
 ### Aligner
+The **aligner** module is based on the Smith-Waterman algorithm for sequence 
+alignment. It provides the capability to execute single-core or 
+multiprocessing-based match searches. 
 ```python
 from Database_comparator import db_compare
 
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
-
-#Single core
-db.aligner.smithWatermanAlgorithm_match_search_in_single_database(database_index=0)
-db.aligner.smithWatermanAlgorithm_match_search_in_all_databases()
-
-#Multiprocessing
-db.aligner.smithWatermanAlgorithm_match_search_in_single_database(database_index=0, parallel=True)
-db.aligner.smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING()
-db.aligner.smithWatermanAlgorithm_match_search_in_all_databases(parallel=True)
-db.aligner.smithWatermanAlgorithm_match_search_in_all_databases_MULTIPROCESSING()
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  
+  #Single core
+  db.aligner.smithWatermanAlgorithm_match_search_in_single_database(database_index=0)
+  db.aligner.smithWatermanAlgorithm_match_search_in_all_databases()
+  
+  #Multiprocessing
+  db.aligner.smithWatermanAlgorithm_match_search_in_single_database(database_index=0, parallel=True)
+  db.aligner.smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING()
+  db.aligner.smithWatermanAlgorithm_match_search_in_all_databases(parallel=True)
+  db.aligner.smithWatermanAlgorithm_match_search_in_all_databases_MULTIPROCESSING()
 ```
 ### BLAST
+The **blast** module enables users to create BLAST databases, perform BLAST 
+searches for matches, and analyze the results using the aligner.
 ```python
 from Database_comparator import db_compare
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
-# Info about BLAST
-db.blast.blast_database_info()
 
-# Making BLAST database
-db.blast.blast_make_database(name="BLAST_Database")
-
-db.blast.blast_search_for_match_in_database() #Query is input database
-db.blast.analyze_matches_in_database() #BLAST output will be analyzed with aligner
-
-# User can also use this function.
-db.blast.blast_search_and_analyze_matches_in_database()
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  # Info about BLAST
+  db.blast.blast_database_info()
+  
+  # Making BLAST database
+  db.blast.blast_make_database(name="BLAST_Database")
+  
+  db.blast.blast_search_for_match_in_database() #Query is input database
+  db.blast.analyze_matches_in_database() #BLAST output will be analyzed with aligner
+  
+  # User can also use this function.
+  db.blast.blast_search_and_analyze_matches_in_database()
 ```
 ### Hamming distances
+The **hamming_distances** module calculates Hamming distances between sequences. 
+Users can explore Hamming distances in single databases or across all 
+databases. 
 ```python
 from Database_comparator import db_compare
-cfg_file = 'path_to_config_file.txt'
-db = db_compare.DB_comparator(cfg_file)
 
-db.hamming_distances.find_hamming_distances_for_single_database(database_index=0)
-db.hamming_distances.find_hamming_distances_for_all_databases()
-
-# User can also do this
-db.hamming_distances.find_hamming_distances_for_single_database(database_index=0, analyze=False)
-db.hamming_distances.analyze_single_hamming_matrix(database_index=0)
-
-db.hamming_distances.find_hamming_distances_for_all_databases(analyze=False)
-db.hamming_distances.analyze_all_hamming_matrices()
-
-# Hamming matrices are stored in >hamming_matrices_for_all_databases<
-db_matrices = db.hamming_distances.hamming_matrices_for_all_databases
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file)
+  
+  db.hamming_distances.find_hamming_distances_for_single_database(database_index=0)
+  db.hamming_distances.find_hamming_distances_for_all_databases()
+  
+  # User can also do this
+  db.hamming_distances.find_hamming_distances_for_single_database(database_index=0, analyze=False)
+  db.hamming_distances.analyze_single_hamming_matrix(database_index=0)
+  
+  db.hamming_distances.find_hamming_distances_for_all_databases(analyze=False)
+  db.hamming_distances.analyze_all_hamming_matrices()
+  
+  # Hamming matrices are stored in >hamming_matrices_for_all_databases<
+  db_matrices = db.hamming_distances.hamming_matrices_for_all_databases
 ```
+## Example
+Performing BLAST
+```python
+from Database_comparator import db_compare
 
+if __name__ == "__main__":
+    cfg_file = "config_file.txt"
+    db = db_compare.DB_comparator(config_file=cfg_file)
+    
+    db.blast.blast_make_database(name="Blast_db")
+    db.blast.blast_search_and_analyze_matches_in_database()
+    
+    db.export_data_frame(output_file="Blast_results.xlsx")
+
+
+```

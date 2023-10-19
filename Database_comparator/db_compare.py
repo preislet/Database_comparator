@@ -16,7 +16,7 @@ class DB_comparator:
     and calculates Hamming distances between sequences. The class allows for exporting the results to
     different file formats, such as Excel, CSV, and Markdown.
     """
-    def __init__(self, config_file = "DEFAULT_config_file.txt") -> None:
+    def __init__(self, config_file) -> None:
         """
         Initialize the DB_comparator class to compare databases based on the provided configuration.
 
@@ -32,7 +32,8 @@ class DB_comparator:
         self.exact_match = db_exact_match.exact_match(self.config)  # Done
         self.aligner = db_aligner.aligner(self.config)   # Done
         self.blast = db_blast.blast(self.config, self.aligner)  # Done
-        self.hamming_distances = db_hamming.hamming_distance(self.config)  # TODO
+        self.hamming_distances = db_hamming.hamming_distance(self.config)  # Done
+        # Place for new modules...
 
     def __str__(self) -> str:
         return str(self.config)

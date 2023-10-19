@@ -11,10 +11,18 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 StopCodon = "#"
-
-
 class cfg:
-    def __init__(self, config_file: str) -> None:
+    """
+    Initialize the configuration class for a bioinformatics sequence analysis program.
+
+    Args:
+        config_file (str): Path to the configuration file.
+
+    Note:
+        This constructor initializes various parameters and loads settings from the
+        specified configuration file to customize the behavior of the program.
+    """
+    def __init__(self, config_file=None) -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -72,7 +80,6 @@ class cfg:
         self.input_df = None
         self.__load_input_df()
 
-    
     def __str__(self) -> str:
         temp = vars(self)
         for item in temp:
@@ -91,6 +98,10 @@ class cfg:
             This method reads and interprets settings from the provided configuration file
             and populates the class properties accordingly.
         """
+        if config_file is None:
+            print("A configuration file was not provided. Please provide the configuration folder and restart the program")
+            print("See the documentation for more information: https://pypi.org/project/Database-comparator")
+
         file = open(config_file, 'r')
         for line in file:
             line = line.split()
