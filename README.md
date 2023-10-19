@@ -6,14 +6,14 @@ A program for searching and analyzing databases using various algorithms.
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)
-- [Configuration file](#Configuration file)
-  - [Syntax of configuration file](#Syntax of config file)
-  - [Inserting configuration file to program](#Inserting config file to program)
+- [Configuration file](#Configuration-file)
+  - [Syntax of configuration file](#Syntax-of-config-file)
+  - [Inserting configuration file to program](#Inserting-config-file-to-program)
 - [Usage](#Usage)
-  - [Exact match](#Exact match)
+  - [Exact match](#Exact-match)
   - [Aligner](#Aligner)
   - [BLAST](#BLAST)
-  - [Hamming distances](#Hamming distances)
+  - [Hamming distances](#Hamming-distances)
 
 ## Overview
 The program is for comparing and analyzing databases using various methods.
