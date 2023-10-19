@@ -1,0 +1,6 @@
+setuptools~=68.2.2
+pandas~=2.1.1
+tqdm~=4.66.1
+bio~=1.5.9
+numpy~=1.26.0
+pyreadr~=0.4.9
