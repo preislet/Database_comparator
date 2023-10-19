@@ -1,0 +1,24 @@
+# Databases
+QUERY HEDIMED__230620_Hedimed_1_22_basic--table_EF_predelana.xlsx part3
+
+# DB Databases/Nakayama.csv CDR3b [Clone/SequenceID, Epitope]
+# DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]
+# DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
+DB Databases/TCRdb_all_sequnces.csv AASeq [TCRDB_project_ID, RunId, cloneFraction]
+
+# Smith–Waterman algorithm
+SWA_tolerance 0.9
+SWA_gap_score -1000
+SWA_mismatch_score 0
+SWA_match_score 1
+
+# Blastp Algorithm
+BLAST_e_value 0.05
+BLAST_database_name clip_seq_db
+BLAST_output_name blastp_output.txt
+
+# Hamming distance
+HD_max_distance 1
+
+# Multiprocessing
+number_of_processors 3
