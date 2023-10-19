@@ -1,4 +1,3 @@
-import pandas as pd
 import src.db_exact_match as db_exact_match
 import src.db_aligner as db_aligner
 import src.db_blast as db_blast
