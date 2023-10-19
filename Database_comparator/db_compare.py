@@ -1,8 +1,8 @@
-import src.db_exact_match as db_exact_match
-import src.db_aligner as db_aligner
-import src.db_blast as db_blast
-import src.db_hamming as db_hamming
-import src.config_class as config_class
+import Database_comparator.db_exact_match as db_exact_match
+import Database_comparator.db_aligner as db_aligner
+import Database_comparator.db_blast as db_blast
+import Database_comparator.db_hamming as db_hamming
+import Database_comparator.config_class as config_class
 
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)

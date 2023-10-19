@@ -1,6 +1,6 @@
 import pandas as pd
 
-from src.config_class import cfg
+from Database_comparator.config_class import cfg
 from tqdm import tqdm
 import numpy as np
 

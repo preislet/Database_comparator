@@ -1,12 +1,12 @@
 import pandas as pd
 from tqdm import tqdm
-from src.config_class import cfg
+from Database_comparator.config_class import cfg
 import os
 from Bio.Blast.Applications import NcbiblastpCommandline
 from Bio.Blast.Applications import NcbimakeblastdbCommandline
 
-import src.Fasta_maker as Fasta_maker
-import src.db_aligner as db_aligner
+import Database_comparator.Fasta_maker as Fasta_maker
+import Database_comparator.db_aligner as db_aligner
 
 FastaSeparator = "!"
 

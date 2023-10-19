@@ -1,4 +1,4 @@
-from src.config_class import cfg
+from Database_comparator.config_class import cfg
 import pandas as pd
 import multiprocessing as mp
 import numpy as np
