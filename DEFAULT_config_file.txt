@@ -1,10 +1,10 @@
 # Databases
 QUERY HEDIMED__230620_Hedimed_1_22_basic--table_EF_predelana.xlsx part3
 
-# DB Databases/Nakayama.csv CDR3b [Clone/SequenceID, Epitope]
-# DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]
-# DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
-DB Databases/TCRdb_all_sequnces.csv AASeq [TCRDB_project_ID, RunId, cloneFraction]
+DB Databases/Nakayama.csv CDR3b [Clone/SequenceID, Epitope]
+DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]
+DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
+# DB Databases/TCRdb_all_sequnces.csv AASeq [TCRDB_project_ID, RunId, cloneFraction]
 
 # Smith–Waterman algorithm
 SWA_tolerance 0.9

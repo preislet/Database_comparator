@@ -331,3 +331,21 @@ class cfg:
         for i in range(len(self.data_info)):
             if filename in self.data_info[i]["path"]:
                 return i
+
+    @staticmethod
+    def load_database(path: str, engine=None) -> pd.DataFrame:
+        suffix = Path(path).suffix
+        supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
+
+        if suffix == ".csv":
+            return pd.DataFrame(pd.read_csv(path, engine=engine))
+        elif suffix in [".xlsx", ".xls"]:
+            return pd.DataFrame(pd.read_excel(path, engine=engine))
+        elif suffix in [".RData", ".Rbin", ".RDATA"]:
+            data = pr.read_r(path)
+            return data[os.path.splitext(path)[0]]
+        elif suffix == ".tsv":
+            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine))
+        else:
+            err = f"File format is not supported for database. Supported formats: {supported_formats}"
+            raise Exception(err)

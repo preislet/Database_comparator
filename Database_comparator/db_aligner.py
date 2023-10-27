@@ -125,7 +125,7 @@ class aligner:
         front = self.config.load_datafiles_names_from_stored_path(database_index=database_index)
 
         for data_file in front:
-            data_df = pd.DataFrame(pd.read_csv(data_file, engine='python'))
+            data_df = self.config.load_database(path = data_file, engine="python")
             self.__align_all_sequences_in_input_df_with_data_df(data_df=data_df, database_index=database_index)
 
         self.config.fill_Nans(database_index)
@@ -169,7 +169,7 @@ class aligner:
 
         multiprocessing_result_dfs = None
         for data_file in front:
-            self.config.ns.df = pd.DataFrame(pd.read_csv(data_file, engine='python'))
+            self.config.ns.df = self.config.load_database(path = data_file, engine="python")
             pool = mp.Pool(processes=self.config.number_of_processors)
             multiprocessing_result_dfs = pool.starmap(self._align_all_sequences_in_input_df_with_data_df_MULTIPROCESSING,
                                                       [(multiprocessing_input_dfs[i], self.config.ns.df, database_index) for i

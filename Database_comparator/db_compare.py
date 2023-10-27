@@ -65,5 +65,6 @@ class DB_comparator:
             self.config.input_df.to_csv(output_file, index=False)
         if data_format == "md":
             self.config.input_df.to_markdown(output_file, index=False)
+
         
 
