@@ -31,5 +31,5 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install database_comparator
 
 
-WORKDIR /home/rstudio/database_search
+WORKDIR /home/rstudio/database_comparator
 EXPOSE 8787
