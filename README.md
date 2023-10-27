@@ -32,6 +32,7 @@ Use the following command to install the program:
 ```shell
 pip install Database-comparator
 ```
+BLAST needs to be installed [manually](https://www.ncbi.nlm.nih.gov/books/NBK569861/).
 
 ## Configuration file
 The configuration file is used to adjust the program properly to the data that the user wants to analyze. The configuration 
@@ -82,6 +83,8 @@ SWA_tolerance >float<
 SWA_gap_score >int<
 SWA_mismatch_score >int<
 SWA_match_score >int<
+SWA_matrix >name of scoring matrix<
+SWA_mode >local | global<
 
 BLAST_e_value >float<
 BLAST_database_name >the name of the blast database that will be created if needed<
