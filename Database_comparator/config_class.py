@@ -9,6 +9,8 @@ from Bio import Align
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
+# TODO udělat kontrolu formátu pro databaze - zatím je podporován jen .csv formát => rozšířit podporované formáty
+# TODO updatovat README o nové parametry v config file (swa_mode, matice)
 
 StopCodon = "#"
 class cfg:
@@ -51,10 +53,6 @@ class cfg:
         # Smith–Waterman algorithm
         self.aligner = Align.PairwiseAligner()
         self.tolerance = 0.93
-        self.aligner.open_gap_score = -1000
-        self.aligner.extend_gap_score = -1000
-        self.aligner.mismatch_score = 0
-        self.aligner.match_score = 1
 
         # Blastp Algorithm
         self.e_value = 0.05
@@ -86,6 +84,7 @@ class cfg:
             print(item, ' : ', temp[item])
 
         return ""
+    
     
     def __load_config(self, config_file):
         """
@@ -123,7 +122,7 @@ class cfg:
                     "sequence_column_name": line[2],
                     "starting_row": 0
                 }
-            elif line[0].upper() == "SWA_tolerance".upper():
+            elif line[0].upper() == "SWA_tolerance".upper(): 
                 self.tolerance = float(line[1])
             elif line[0].upper() == "SWA_gap_score".upper():
                 self.aligner.open_gap_score = float(line[1])
@@ -142,6 +141,18 @@ class cfg:
                 self.max_hamming_distance = int(line[1])
             elif line[0].upper() == "number_of_processors".upper():
                 self.number_of_processors = int(line[1])
+            elif line[0].upper() == "SWA_matrix".upper():
+                if not line[1] in Align.substitution_matrices.load():
+                    err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
+                    raise Exception(err) 
+                self.aligner.substitution_matrix = Align.substitution_matrices.load(line[1])
+            elif line[0].upper == "SWA_mode".upper():
+                if not line[0].lower in ["local", "global"]:
+                    err = "Mode not found. Please use only global/local"
+                    raise Exception(err)
+                
+                self.aligner.mode = line[0].lower()
+
             elif line[0].upper() == "#".upper():
                 pass
             else:
@@ -157,6 +168,7 @@ class cfg:
             This method loads data from the input file, performs data cleaning and
             preprocessing tasks, and stores the resulting DataFrame in the class.
         """
+        supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
         path = self.input_file_info["path"]
         if Path(path).suffix == ".csv":
             self.input_df = pd.DataFrame(pd.read_csv(self.input_file_info["path"]))
@@ -165,8 +177,10 @@ class cfg:
         elif Path(path).suffix in [".RData", ".Rbin", ".RDATA"]:
             data = pr.read_r(path)
             self.input_df = data[os.path.splitext(path)[0]]
+        elif Path(path).suffix == ".tsv":
+            self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
         else:
-            print("File format is not supported. Supported formats: .csv, .xlsx, .xls")
+            print(f"File format is not supported. Supported formats: {supported_formats}")
         
         if self.repair_input_df:
             self.__repair_input_df()
