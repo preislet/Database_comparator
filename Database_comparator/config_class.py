@@ -78,15 +78,36 @@ class cfg:
         self.__load_config(config_file)
 
         # dataframe of input file
+        self.separator_of_results_in_input_df = "\n"
         self.repair_input_df = True
         self.input_df = None
         self.__load_input_df()
 
     def __str__(self) -> str:
-        temp = vars(self)
-        for item in temp:
-            print(item, ' : ', temp[item])
-
+        print("Configuration settings:")
+        print(f"Input file path: {self.input_file_path}")
+        print(f"Input file info: {self.input_file_info}")
+        print("-"*200)
+        print(f"Data info: {self.data_info}")
+        print("-"*200)
+        print(f"Aligner: {self.aligner}")
+        print(f"Tolerance: {self.tolerance}")
+        print("-"*200)
+        print(f"E-value: {self.e_value}")
+        print(f"Blast database name: {self.blast_database_name}")
+        print(f"Blast output name: {self.blast_output_name}")
+        print(f"Blast database full name: {self.blast_database_full_name}")
+        print(f"Blast default input query: {self.blast_default_input_query}")
+        print(f"Blast outfmt: {self.blast_outfmt}")
+        print("-"*200)
+        print(f"Max hamming distance: {self.max_hamming_distance}")
+        print("-"*200)
+        print(f"Number of processors: {self.number_of_processors}")
+        print(f"Namespace: {self.ns}")
+        print("-"*200)
+        print(f"Separator of results in input df: {self.separator_of_results_in_input_df}")
+        print(f"Input df: {self.input_df}")
+        print("-"*200)
         return ""
     
     
@@ -185,6 +206,17 @@ class cfg:
                 
                 self.aligner.mode = line[1].lower()
 
+            elif line[0].upper() == "separator".upper():
+                prohibited_characters = [",", ";", ":", "\t", " "]
+                if line[1] in prohibited_characters and line[2].upper() != "BRUTEFORCE":
+                    err = f"Separator cannot be {line[1]}. Prohibited characters: {prohibited_characters}. If you want to use one of these characters, please use the following format: <SEPARATOR prohibited_char BRUTEFORCE>"
+                    raise Exception(err)
+                try: 
+                    self.separator_of_results_in_input_df = line[1]
+                    if  line[1] in prohibited_characters and line[2].upper() == "BRUTEFORCE":
+                        print("Bruteforce mode is on. This mode is not recommended for large datasets.")
+                except: raise Exception(f"line: {line}... Separator not valid")
+
             elif line[0].upper() == "#".upper():
                 pass
             else:
@@ -213,19 +245,34 @@ class cfg:
         elif Path(path).suffix == ".tsv":
             self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
         else:
-            print(f"File format is not supported. Supported formats: {supported_formats}")
+            raise Exception(f"File format is not supported. Supported formats: {supported_formats}")
         
         if self.repair_input_df:
             self.__repair_input_df()
 
-    # Resets the class to default values before running a new analysis
-    # TODO Add reset_before_analysis infront of every analysis - Decorator propably
-    def reset_before_analysis(self):
+    def reset_before_analysis(self, bruteforce = False):
+        """
+        Reset the class to default values before running a new analysis.
+
+        Args:
+            bruteforce (bool): Whether to use brute force mode (default is False).
+
+        Note:
+            This method resets the class to default values before running a new analysis.
+        """
         if self.__check_if_input_df_changed():
             print("#"*200)
-            print("Resetting the class to default values before running a new analysis")
-            self.input_df = None
-            self.__load_input_df()
+            print("Resetting dataframes to default values before running a new analysis")
+            if bruteforce:
+                self.input_df = None
+                self.__load_input_df()
+                print("Input dataframe was reloaded - BRUTEFORCE mode is on")
+
+            else: 
+                for db in self.data_info: 
+                    self.input_df[db["results_column"]] = np.nan
+                
+
             print("Reset was successfuly done")
             print("Analysing the data...")
             print("#"*200)
@@ -242,9 +289,7 @@ class cfg:
             the last analysis.
         """
 
-        # TODO: check if the input_df has been 
         return not all([pd.isnull(self.input_df[self.data_info[i]["results_column"]]).all() for i in range(len(self.data_info))])
-        # Not sure if this is the best way to check if the input_df has been changed
 
     def __repair_input_df(self):
         """
@@ -278,9 +323,7 @@ class cfg:
             data from a specific database.
         """
         result_column_name = self.data_info[database_index]["results_column"]
-        for i in range(len(self.input_df)):
-            if pd.isnull(self.input_df.loc[i, result_column_name]):
-                self.input_df.loc[i, result_column_name] = "False"
+        self.input_df[result_column_name].fillna(value="False", inplace=True)
 
     @staticmethod
     def merge_all_identifiers(data_df: pd.DataFrame, identifier_column_names: list, output_sequence_index: int) -> str:
@@ -338,10 +381,10 @@ class cfg:
 
         identifier = ";".join(set(identifier.split(sep=";")))
         if pd.isnull(input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]]):
-            input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = f"[seq: {sseq}{identifier}]\n"
+            input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = f"[seq: {sseq}{identifier}]" + self.separator_of_results_in_input_df
         else:
             input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = str(input_df[self.data_info[database_index]["results_column"]][input_sequence_index]) \
-                                                                                                        + f"[seq: {sseq}{identifier}]\n"
+                                                                                                        + f"[seq: {sseq}{identifier}]" + self.separator_of_results_in_input_df
 
         if self.show_report_while_inserting_match_to_input_df:
             input_sequence = input_df[self.input_file_info["sequence_column_name"]][input_sequence_index]

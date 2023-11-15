@@ -60,7 +60,7 @@ class exact_match:
             This private method iterates over all sequences in the input DataFrame and searches for matches
             in the specified database. It inserts matching results into the input DataFrame using the configuration settings.
         """
-        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Searching for exact match in database with index: {database_index}"):
+        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Searching for exact match in database with index: {database_index}",  bar_format='{l_bar}{bar:100}{r_bar}'):
             self.__search_for_single_sequence_in_input_df(data_df, database_index, i)
 
     # PUBLIC Exact search

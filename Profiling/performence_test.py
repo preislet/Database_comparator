@@ -1,9 +1,11 @@
-import Database_comparator
 import sys
 import cProfile
 
+sys.path.insert(1,"../Database_comparator")
+from Database_comparator import DB_comparator
+
 def reload():
-    return Database_comparator.DB_comparator(config_file="DEFAULT_config_file.txt")
+    return DB_comparator(config_file="DEFAULT_config_file.txt")
 
 
 def profile(function, output_file):
@@ -28,5 +30,7 @@ if __name__ == "__main__":
     db.exact_match.exact_match_search_in_all_databases()
     db.exact_match.exact_match_search_in_all_databases()
     db.export_data_frame()
+
+    
 
     

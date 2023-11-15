@@ -6,6 +6,9 @@ DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additiona
 DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
 # DB Databases/TCRdb_all_sequnces.csv AASeq [TCRDB_project_ID, RunId, cloneFraction]
 
+# separator of results
+SEPARATOR \n
+
 # Smith–Waterman algorithm
 SWA_tolerance 0.9
 SWA_gap_score -1000

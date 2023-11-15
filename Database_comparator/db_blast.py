@@ -72,7 +72,8 @@ class blast:
 
             fasta_maker.make_file()
         cline = NcbimakeblastdbCommandline(dbtype="prot", input_file=fasta_file_name, input_type="fasta", title=name, max_file_sz="2GB", out=self.config.blast_database_full_name)
-        cline()
+        try: cline()
+        except: raise Exception("Error in creating blast database")
 
     def blast_search_for_match_in_database(self, query=None):
         """
@@ -102,7 +103,9 @@ class blast:
         blast_out = self.config.blast_output_name
         blastp_cline = NcbiblastpCommandline(query=blast_in, db=self.config.blast_database_full_name, evalue=self.config.e_value, outfmt=self.config.blast_outfmt, out=blast_out)
 
-        blastp_cline()
+        try: blastp_cline()
+        except: raise Exception(f"Error in blasting against database {self.config.blast_database_full_name}")
+
         print(f"Blasting done. Output: {blast_out}")
         print("-" * 200)
 
@@ -134,7 +137,7 @@ class blast:
         columns_names = self.config.blast_outfmt.split()
         data = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:])
         data_df = pd.DataFrame(data).drop_duplicates(ignore_index=True)
-        
+
         for i in tqdm(range(len(data_df)), desc="Analyzing BLAST output data with aligner", colour="green"):
             if self.aligner.align_sequences(data_df["qseq"][i], data_df["sseq"][i]):
                 self.__insert_blast_results_to_input_df(data_df, i)
@@ -164,8 +167,8 @@ class blast:
         output_seq_identifier = ";".join(set(output_seq_identifier.split(sep=";")))
         database_index = self.config.find_database_index(filename=file_name)
         if pd.isnull(self.config.input_df[self.config.data_info[database_index]["results_column"]][input_seq_index]):
-            self.config.input_df.loc[input_seq_index, self.config.data_info[database_index]["results_column"]] = f"[seq: {sseq} identifier:{output_seq_identifier}]\n"
+            self.config.input_df.loc[input_seq_index, self.config.data_info[database_index]["results_column"]] = f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
         else:
             self.config.input_df.loc[input_seq_index, self.config.data_info[database_index]["results_column"]] = \
-                self.config.input_df[self.config.data_info[database_index]["results_column"]][input_seq_index] + f"[seq: {sseq} identifier:{output_seq_identifier}]\n"
+                self.config.input_df[self.config.data_info[database_index]["results_column"]][input_seq_index] + f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
     # ------------------------------------------------------------------------------------------------
