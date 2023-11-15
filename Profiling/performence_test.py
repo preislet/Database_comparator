@@ -14,6 +14,7 @@ def profile(function, output_file):
         cProfile.run(function, sort='cumulative')
 
 if __name__ == "__main__":
+    """
     db = reload()
     profile("db.exact_match.exact_match_search_in_all_databases()", "exact_match_search_in_all_databases.txt")
     db = reload()
@@ -21,5 +22,11 @@ if __name__ == "__main__":
     db = reload()
     profile("db.hamming_distances.find_hamming_distances_for_all_databases()", "hamming_distances_for_all_databases.txt")
     print("Done")
+    """
+    db = reload()
+    db.exact_match.exact_match_search_in_all_databases()
+    db.exact_match.exact_match_search_in_all_databases()
+    db.exact_match.exact_match_search_in_all_databases()
+    db.export_data_frame()
 
     

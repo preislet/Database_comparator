@@ -103,9 +103,10 @@ class blast:
         blastp_cline = NcbiblastpCommandline(query=blast_in, db=self.config.blast_database_full_name, evalue=self.config.e_value, outfmt=self.config.blast_outfmt, out=blast_out)
 
         blastp_cline()
-        #print(F"Blasting done. Output: {blast_out}")
+        print(f"Blasting done. Output: {blast_out}")
+        print("-" * 200)
 
-    def blast_search_and_analyze_matches_in_database(self, query=None):
+    def blast_search_and_analyze_matches_in_database(self, query=None) -> pd.DataFrame:
         """
         Perform a BLAST search in a BLAST database and then analyze the output data.
 
@@ -119,7 +120,9 @@ class blast:
         self.blast_search_for_match_in_database(query)
         self.blast_analyze_output_data()
 
-    def blast_analyze_output_data(self):
+        return self.config.input_df.copy(deep=True)
+
+    def blast_analyze_output_data(self) -> pd.DataFrame:
         """
         Analyze the output data from a BLAST search and insert results into the input DataFrame.
 
@@ -127,13 +130,15 @@ class blast:
             This method analyzes the output data from a previous BLAST search and inserts matching results
             into the input DataFrame using the specified aligner and configuration settings.
         """
+        self.config.reset_before_analysis()
         columns_names = self.config.blast_outfmt.split()
         data = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:])
         data_df = pd.DataFrame(data).drop_duplicates(ignore_index=True)
+        
         for i in tqdm(range(len(data_df)), desc="Analyzing BLAST output data with aligner", colour="green"):
             if self.aligner.align_sequences(data_df["qseq"][i], data_df["sseq"][i]):
                 self.__insert_blast_results_to_input_df(data_df, i)
-
+        return self.config.input_df.copy(deep=True)
     # PRIVATE Blast algorithm
     def __insert_blast_results_to_input_df(self, data_df: pd.DataFrame, index):
         """

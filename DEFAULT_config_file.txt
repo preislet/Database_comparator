@@ -1,5 +1,5 @@
 # Databases
-QUERY HEDIMED__230620_Hedimed_1_22_basic--table_EF_predelana.xlsx part3
+QUERY query.xlsx part3
 
 DB Databases/Nakayama.csv CDR3b [Clone/SequenceID, Epitope]
 DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]

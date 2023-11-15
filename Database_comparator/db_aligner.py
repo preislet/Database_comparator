@@ -44,7 +44,7 @@ class aligner:
                         input_sequence_index=i,
                         output_sequence_index=j)
 
-    def _align_all_sequences_in_input_df_with_data_df_MULTIPROCESSING(self, mp_input_df: pd.DataFrame, data_df: pd.DataFrame, database_index: int):
+    def _align_all_sequences_in_input_df_with_data_df_MULTIPROCESSING(self, mp_input_df: pd.DataFrame, data_df: pd.DataFrame, database_index: int) -> pd.DataFrame:
         """
         Align sequences from the input DataFrame with sequences from a data DataFrame for a specific database
         using multiprocessing.
@@ -107,7 +107,7 @@ class aligner:
         if score/max_score >= self.config.tolerance: return True
         return False
 
-    def smithWatermanAlgorithm_match_search_in_single_database(self, database_index: int, parallel=False):
+    def smithWatermanAlgorithm_match_search_in_single_database(self, database_index: int, parallel=False) -> pd.DataFrame:
         """
         Perform Smith-Waterman algorithm-based match search in a single database.
 
@@ -129,9 +129,9 @@ class aligner:
             self.__align_all_sequences_in_input_df_with_data_df(data_df=data_df, database_index=database_index)
 
         self.config.fill_Nans(database_index)
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
-    def smithWatermanAlgorithm_match_search_in_all_databases(self, parallel=False):
+    def smithWatermanAlgorithm_match_search_in_all_databases(self, parallel=False) -> pd.DataFrame:
         """
         Perform Smith-Waterman algorithm-based match search in all databases.
 
@@ -142,7 +142,7 @@ class aligner:
             This method performs Smith-Waterman algorithm-based match searches in all databases and updates
             the input DataFrame with match results.
         """
-
+        self.config.reset_before_analysis()
         if parallel:
             self.smithWatermanAlgorithm_match_search_in_all_databases_MULTIPROCESSING()
             return
@@ -150,9 +150,9 @@ class aligner:
         for i in range(len(self.config.data_info)):
             self.smithWatermanAlgorithm_match_search_in_single_database(database_index=i)
 
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
-    def smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING(self, database_index: int):
+    def smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING(self, database_index: int) -> pd.DataFrame:
         """
         Perform Smith-Waterman algorithm-based match search in a single database using multiprocessing.
 
@@ -181,9 +181,9 @@ class aligner:
         self.config.input_df[[self.config.data_info[database_index]["results_column"]]] = \
             self.config.input_df[[self.config.data_info[database_index]["results_column"]]].fillna(value="False")
 
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
-    def smithWatermanAlgorithm_match_search_in_all_databases_MULTIPROCESSING(self):
+    def smithWatermanAlgorithm_match_search_in_all_databases_MULTIPROCESSING(self) -> pd.DataFrame:
         """
         Perform Smith-Waterman algorithm-based match search in all databases using multiprocessing.
 
@@ -191,9 +191,10 @@ class aligner:
         This method performs Smith-Waterman algorithm-based match searches in all databases using
         multiprocessing and updates the input DataFrame with match results.
         """
+        self.config.reset_before_analysis()
         for i in range(len(self.config.data_info)):
             self.smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING(database_index=i)
 
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
 # ------------------------------------------------------------------------------------------------
