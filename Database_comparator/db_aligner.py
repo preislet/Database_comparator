@@ -32,7 +32,7 @@ class aligner:
             This method performs sequence alignments using the Smith-Waterman algorithm for all sequences
             in the input DataFrame with sequences from the specified database.
         """
-        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Making alignments in db: {database_index}"):
+        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Making alignments in db: {database_index}", bar_format='{l_bar}{bar:100}{r_bar}'):
             input_seq = self.config.input_df[self.config.input_file_info["sequence_column_name"]][i]
             if "*" in input_seq: continue
             for j in range(len(data_df)):
@@ -122,11 +122,9 @@ class aligner:
         if parallel:
             self.smithWatermanAlgorithm_match_search_in_single_database_MULTIPROCESSING(database_index=database_index)
             return
-        front = self.config.load_datafiles_names_from_stored_path(database_index=database_index)
-
-        for data_file in front:
-            data_df = self.config.load_database(path = data_file, engine="python")
-            self.__align_all_sequences_in_input_df_with_data_df(data_df=data_df, database_index=database_index)
+        
+        data_df = self.config.load_database(database_index=database_index, engine="python")
+        self.__align_all_sequences_in_input_df_with_data_df(data_df=data_df, database_index=database_index)
 
         self.config.fill_Nans(database_index)
         return self.config.input_df.copy(deep=True)
@@ -164,18 +162,17 @@ class aligner:
             multiprocessing and updates the input DataFrame with match results.
         """
 
-        front = self.config.load_datafiles_names_from_stored_path(database_index=database_index)
         multiprocessing_input_dfs = mp.Manager().list(np.array_split(self.config.input_df, self.config.number_of_processors))
 
         multiprocessing_result_dfs = None
-        for data_file in front:
-            self.config.ns.df = self.config.load_database(path = data_file, engine="python")
-            pool = mp.Pool(processes=self.config.number_of_processors)
-            multiprocessing_result_dfs = pool.starmap(self._align_all_sequences_in_input_df_with_data_df_MULTIPROCESSING,
-                                                      [(multiprocessing_input_dfs[i], self.config.ns.df, database_index) for i
-                                                       in range(self.config.number_of_processors)])
-            pool.close()
-            pool.join()
+
+        self.config.ns.df = self.config.load_database(database_index=database_index, engine="python")
+        pool = mp.Pool(processes=self.config.number_of_processors)
+        multiprocessing_result_dfs = pool.starmap(self._align_all_sequences_in_input_df_with_data_df_MULTIPROCESSING,
+                                                    [(multiprocessing_input_dfs[i], self.config.ns.df, database_index) for i
+                                                    in range(self.config.number_of_processors)])
+        pool.close()
+        pool.join()
 
         self.config.input_df = pd.concat(multiprocessing_result_dfs, ignore_index=True)
         self.config.input_df[[self.config.data_info[database_index]["results_column"]]] = \

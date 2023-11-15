@@ -63,7 +63,7 @@ class blast:
 
         if not os.path.exists(fasta_file_name) or force:
             fasta_maker = Fasta_maker.Fasta_maker(
-                data_dfs=[pd.DataFrame(pd.read_csv(self.config.data_info[i]["path"], engine="python")) for i in range(len(self.config.data_info))],
+                data_dfs=[self.config.load_database(database_index = i) for i in range(len(self.config.data_info))],
                 sequence_column_names=[self.config.data_info[i]["sequence_column_name"] for i in range(len(self.config.data_info))],
                 identifiers=[self.config.data_info[i]["identifier_of_seq"] for i in range(len(self.config.data_info))],
                 result_columns=[self.config.data_info[i]["results_column"] for i in range(len(self.config.data_info))],

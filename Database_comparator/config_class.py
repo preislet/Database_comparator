@@ -435,20 +435,27 @@ class cfg:
             if filename in self.data_info[i]["path"]:
                 return i
 
-    @staticmethod
-    def load_database(path: str, engine=None) -> pd.DataFrame:
+    def load_database(self, database_index = None, engine=None) -> pd.DataFrame:
+
+        if database_index is None:
+            raise Exception("Database index needs to be specified")
+        
+        path = self.data_info[database_index]["path"]
         suffix = Path(path).suffix
         supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
 
+        columns = self.data_info[database_index]["identifier_of_seq"].extend([self.data_info[database_index]["sequence_column_name"]])
+        print(f"Loading database: {os.path.basename(path)}, index: {database_index}")
+
         if suffix == ".csv":
-            return pd.DataFrame(pd.read_csv(path, engine=engine))
+            return pd.DataFrame(pd.read_csv(path, engine=engine, usecols=columns))
         elif suffix in [".xlsx", ".xls"]:
-            return pd.DataFrame(pd.read_excel(path, engine=engine))
+            return pd.DataFrame(pd.read_excel(path, engine=engine, usecols=columns))
         elif suffix in [".RData", ".Rbin", ".RDATA"]:
-            data = pr.read_r(path)
+            data = pr.read_r(path, use_objects=columns)
             return data[os.path.splitext(path)[0]]
         elif suffix == ".tsv":
-            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine))
+            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine, usecols=columns))
         else:
             err = f"File format is not supported for database. Supported formats: {supported_formats}"
             raise Exception(err)

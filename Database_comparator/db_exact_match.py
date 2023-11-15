@@ -83,11 +83,8 @@ class exact_match:
             self.exact_match_search_in_single_database_MULTIPROCESSING(database_index=database_index)
             return
 
-        front = self.config.load_datafiles_names_from_stored_path(database_index=database_index)
-
-        for data_file in front:
-            data_df = self.config.load_database(path = data_file, engine="python")
-            self.__search_for_all_sequences_in_input_df(data_df, database_index)
+        data_df = self.config.load_database(database_index=database_index, engine="python")
+        self.__search_for_all_sequences_in_input_df(data_df, database_index)
 
         self.config.fill_Nans(database_index)
         return self.config.input_df.copy(deep=True)

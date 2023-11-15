@@ -42,8 +42,8 @@ class hamming_distance:
         for i in range(len(self.hamming_matrices_for_all_databases)):
             if self.hamming_matrices_for_all_databases[i] is None:
                 return
-            data_file = self.config.load_datafiles_names_from_stored_path(database_index=i)
-            data_df = self.config.load_database(path=data_file[0], engine="python")
+            
+            data_df = self.config.load_database(database_index=i, engine="python")
 
             self.analyze_single_hamming_matrix(data_df=data_df, database_index=i)
 
@@ -88,8 +88,7 @@ class hamming_distance:
             This method computes Hamming distances between query sequences and sequences from a single
             database and stores the results in the appropriate data structures.
         """
-        data_file = self.config.load_datafiles_names_from_stored_path(database_index=database_index)
-        data_df = self.config.load_database(path=data_file[0], engine="python")
+        data_df = self.config.load_database(database_index=database_index, engine="python")
         data_sequences = (data_df[self.config.data_info[database_index]["sequence_column_name"]]).tolist()
 
         max_length = max(len(max(self.query_sequences, key=len)), len(max(data_sequences, key=len)))

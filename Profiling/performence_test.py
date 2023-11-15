@@ -27,8 +27,6 @@ if __name__ == "__main__":
     """
     db = reload()
     db.exact_match.exact_match_search_in_all_databases()
-    db.exact_match.exact_match_search_in_all_databases()
-    db.exact_match.exact_match_search_in_all_databases()
     db.export_data_frame()
 
     
