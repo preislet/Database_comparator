@@ -9,6 +9,7 @@ sequence alignment, BLAST searches, and Hamming distance calculations.
 ## Table of Contents
 - [Overview](#Overview)
 - [Installation](#Installation)
+- [Docker](#Docker)
 - [Configuration file](#Configuration-file)
   - [Syntax of configuration file](#Syntax-of-config-file)
   - [Inserting configuration file to program](#Inserting-config-file-to-program)
@@ -33,6 +34,26 @@ Use the following command to install the program:
 pip install Database-comparator
 ```
 BLAST needs to be installed [manually](https://www.ncbi.nlm.nih.gov/books/NBK569861/).
+
+## Docker
+Docker file is provided in repository.
+#### Step 1:
+Run the following command to build the Docker image. Replace <image_name> with a name for your image, and optionally specify a tag (e.g., latest):
+```shell
+docker build -t <image_name>:<tag> .
+```
+#### Step 2:
+After the image is successfully built, you can run a container from it:
+```shell
+docker run -e PASSWORD=rstudio --rm -p 8787:8787 <image_name>:<tag>
+```
+#### Step 3:
+Open a web browser and go to http://localhost:8787.
+
+- Log in to RStudio using the default credentials:
+  - Username: rstudio
+  - Password: rstudio
+
 
 ## Configuration file
 The configuration file is used to adjust the program properly to the data that the user wants to analyze. The configuration 
