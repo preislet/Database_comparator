@@ -57,14 +57,17 @@ class DB_comparator:
             is_longer = self.config.input_df.applymap(lambda x: len(str(x)) > excel_max_cell_string_len)
             if is_longer.any().any() and data_format == "xlsx":
                 print("The dataframe has a cell that cannot be saved to an .xlsx file. The dataframe will be also exported as >Backup_save.csv<")
+                print(f"Max len of cell: {excel_max_cell_string_len}")
                 self.config.input_df.to_csv("Backup_save.csv", index=False)
 
         if data_format == "xlsx":
             self.config.input_df.to_excel(output_file, index=False)
-        if data_format == "csv":
+        elif data_format == "csv":
             self.config.input_df.to_csv(output_file, index=False)
-        if data_format == "md":
+        elif data_format == "md":
             self.config.input_df.to_markdown(output_file, index=False)
+        else:
+            print("Unsupported data format. Please choose from: xlsx, csv, md")
 
         
 

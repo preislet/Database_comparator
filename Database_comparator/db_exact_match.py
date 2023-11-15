@@ -60,11 +60,11 @@ class exact_match:
             This private method iterates over all sequences in the input DataFrame and searches for matches
             in the specified database. It inserts matching results into the input DataFrame using the configuration settings.
         """
-        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Searching for exact match in database with index: {database_index}"):
+        for i in tqdm(range(self.config.input_file_info["starting_row"], len(self.config.input_df)), desc=f"Searching for exact match in database with index: {database_index}",  bar_format='{l_bar}{bar:100}{r_bar}'):
             self.__search_for_single_sequence_in_input_df(data_df, database_index, i)
 
     # PUBLIC Exact search
-    def exact_match_search_in_single_database(self, database_index: int, parallel=False):
+    def exact_match_search_in_single_database(self, database_index: int, parallel=False) -> pd.DataFrame:
         """
         Perform an exact match search in a single database.
 
@@ -90,9 +90,9 @@ class exact_match:
             self.__search_for_all_sequences_in_input_df(data_df, database_index)
 
         self.config.fill_Nans(database_index)
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
-    def exact_match_search_in_all_databases(self, parallel=False):
+    def exact_match_search_in_all_databases(self, parallel=False) -> pd.DataFrame:
         """
         Perform an exact match search in all databases.
 
@@ -102,11 +102,15 @@ class exact_match:
         Note:
             This method performs an exact match search in all databases and can optionally use parallel processing.
         """
+        self.config.reset_before_analysis()
         if parallel:
             self.exact_match_search_in_all_databases_MULTIPROCESSING()
             return
         for i in range(len(self.config.data_info)):
             self.exact_match_search_in_single_database(database_index=i)
+
+        return self.config.input_df.copy(deep=True)
+
 
     # ------------------------------------Exact search multiprocessing------------------------------------------------
 
@@ -139,7 +143,7 @@ class exact_match:
 
         return mp_input_df
 
-    def exact_match_search_in_single_database_MULTIPROCESSING(self, database_index: int):
+    def exact_match_search_in_single_database_MULTIPROCESSING(self, database_index: int) -> pd.DataFrame:
         """
         Perform an exact match search in a single database using multiprocessing.
 
@@ -170,9 +174,9 @@ class exact_match:
         self.config.input_df[[self.config.data_info[database_index]["results_column"]]] = \
             self.config.input_df[[self.config.data_info[database_index]["results_column"]]].fillna(value="False")
 
-        return self.config.input_df
+        return self.config.input_df.copy(deep=True)
 
-    def exact_match_search_in_all_databases_MULTIPROCESSING(self):
+    def exact_match_search_in_all_databases_MULTIPROCESSING(self) -> pd.DataFrame:
         """
         Perform an exact match search in all databases using multiprocessing.
 
@@ -182,7 +186,8 @@ class exact_match:
         Note:
             This method performs an exact match search in all databases using multiprocessing.
         """
+        self.config.reset_before_analysis()
         for i in range(len(self.config.data_info)):
             self.exact_match_search_in_single_database_MULTIPROCESSING(database_index=i)
 
-        return self.config.input_df
+        return self.config.copy(deep=True)

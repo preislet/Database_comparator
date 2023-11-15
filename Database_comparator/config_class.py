@@ -68,21 +68,46 @@ class cfg:
         self.max_hamming_distance = 1
 
         # Multiprocessing
-        self.number_of_processors = mp.cpu_count()-1 or 1
-        self.ns = mp.Manager().Namespace()
+        self.number_of_processors = 1
+        self.ns = None
+        try:
+            self.ns = mp.Manager().Namespace()
+        except:
+            raise Exception("Multiprocessing is not supported on this system. Exception was raised do to >>>mp.Manager().Namespace()<<<. Comparator must be used under if __name__ == '__main__':")
 
         self.__load_config(config_file)
 
         # dataframe of input file
+        self.separator_of_results_in_input_df = "\n"
         self.repair_input_df = True
         self.input_df = None
         self.__load_input_df()
 
     def __str__(self) -> str:
-        temp = vars(self)
-        for item in temp:
-            print(item, ' : ', temp[item])
-
+        print("Configuration settings:")
+        print(f"Input file path: {self.input_file_path}")
+        print(f"Input file info: {self.input_file_info}")
+        print("-"*200)
+        print(f"Data info: {self.data_info}")
+        print("-"*200)
+        print(f"Aligner: {self.aligner}")
+        print(f"Tolerance: {self.tolerance}")
+        print("-"*200)
+        print(f"E-value: {self.e_value}")
+        print(f"Blast database name: {self.blast_database_name}")
+        print(f"Blast output name: {self.blast_output_name}")
+        print(f"Blast database full name: {self.blast_database_full_name}")
+        print(f"Blast default input query: {self.blast_default_input_query}")
+        print(f"Blast outfmt: {self.blast_outfmt}")
+        print("-"*200)
+        print(f"Max hamming distance: {self.max_hamming_distance}")
+        print("-"*200)
+        print(f"Number of processors: {self.number_of_processors}")
+        print(f"Namespace: {self.ns}")
+        print("-"*200)
+        print(f"Separator of results in input df: {self.separator_of_results_in_input_df}")
+        print(f"Input df: {self.input_df}")
+        print("-"*200)
         return ""
     
     
@@ -98,65 +123,105 @@ class cfg:
             and populates the class properties accordingly.
         """
         if config_file is None:
-            print("A configuration file was not provided. Please provide the configuration folder and restart the program")
+            print("A configuration file was not provided. Please provide the configuration file and restart the program")
             print("See the documentation for more information: https://pypi.org/project/Database-comparator")
-
+            raise Exception("Configuration file was not provided")
+        
         file = open(config_file, 'r')
         for line in file:
             line = line.split()
             if len(line) == 0:
                 continue
+            
 
             if line[0].upper() == "DB":
-                data = {
-                    "path": line[1],
-                    "sequence_column_name": line[2],
-                    "results_column": line[1][:-4],
-                    "identifier_of_seq": "".join(line[3:]).strip('][').split(',')
-                }
-                self.data_info.append(data)
+                try:
+                    data = {
+                        "path": line[1],
+                        "sequence_column_name": line[2],
+                        "results_column": line[1][:-4],
+                        "identifier_of_seq": "".join(line[3:]).strip('][').split(',')
+                    }
+                    self.data_info.append(data)
+                except: raise Exception(f"line: {line}... Database path, sequence column name or results column name is missing. Please check your config file.")
+
             elif line[0].upper() == "QUERY":
-                self.input_file_path = line[1]
-                self.input_file_info = {
-                    "path": self.input_file_path,
-                    "sequence_column_name": line[2],
-                    "starting_row": 0
-                }
+                try:
+                    self.input_file_path = line[1]
+                    self.input_file_info = {
+                        "path": self.input_file_path,
+                        "sequence_column_name": line[2],
+                        "starting_row": 0
+                    }
+                except:
+                    raise Exception(f"line: {line}... Input file path or sequence column name is missing. Please check your config file.")
+                
             elif line[0].upper() == "SWA_tolerance".upper(): 
-                self.tolerance = float(line[1])
+                try: self.tolerance = float(line[1])
+                except: raise Exception(f"line: {line}... Tolerance must be float")
+
             elif line[0].upper() == "SWA_gap_score".upper():
-                self.aligner.open_gap_score = float(line[1])
-                self.aligner.extend_gap_score = float(line[1])
+                try: 
+                    self.aligner.open_gap_score = float(line[1])
+                    self.aligner.extend_gap_score = float(line[1])
+
+                except: raise Exception(f"line: {line}... Gap score must be float")
             elif line[0].upper() == "SWA_mismatch_score".upper():
-                self.aligner.mismatch_score = float(line[1])
+                try: self.aligner.mismatch_score = float(line[1])
+                except: raise Exception(f"line: {line}... Mismatch score must be float")
+
             elif line[0].upper() == "SWA_match_score".upper():
-                self.aligner.match_score = float(line[1])
+                try: self.aligner.match_score = float(line[1])
+                except: raise Exception(f"line: {line}... Match score must be float")
+
             elif line[0].upper() == "BLAST_e_value".upper():
-                self.e_value = float(line[1])
+                try: self.e_value = float(line[1])
+                except: raise Exception(f"line: {line}... E-value must be float")
+
             elif line[0].upper() == "BLAST_database_name".upper():
-                self.blast_database_name = line[1]
+                try: self.blast_database_name = line[1]
+                except: raise Exception(f"line: {line}... BLAST database name must be string")
+
             elif line[0].upper() == "BLAST_output_name".upper():
-                self.blast_output_name = line[1]
+                try: self.blast_output_name = line[1]
+                except: raise Exception(f"line: {line}... BLAST output name must be string")
+
             elif line[0].upper() == "HD_max_distance".upper():
-                self.max_hamming_distance = int(line[1])
+                try: self.max_hamming_distance = int(line[1])
+                except: raise Exception(f"line: {line}... Max hamming distance must be integer")
+
             elif line[0].upper() == "number_of_processors".upper():
-                self.number_of_processors = int(line[1])
+                try: self.number_of_processors = int(line[1])
+                except: raise Exception(f"line: {line}... Number of processors must be integer")
+
             elif line[0].upper() == "SWA_matrix".upper():
                 if not line[1] in Align.substitution_matrices.load():
                     err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
                     raise Exception(err) 
                 self.aligner.substitution_matrix = Align.substitution_matrices.load(line[1])
             elif line[0].upper == "SWA_mode".upper():
-                if not line[0].lower in ["local", "global"]:
+                if not line[1].lower in ["local", "global"]:
                     err = "Mode not found. Please use only global/local"
                     raise Exception(err)
                 
-                self.aligner.mode = line[0].lower()
+                self.aligner.mode = line[1].lower()
+
+            elif line[0].upper() == "separator".upper():
+                prohibited_characters = [",", ";", ":", "\t", " "]
+                if line[1] in prohibited_characters and line[2].upper() != "BRUTEFORCE":
+                    err = f"Separator cannot be {line[1]}. Prohibited characters: {prohibited_characters}. If you want to use one of these characters, please use the following format: <SEPARATOR prohibited_char BRUTEFORCE>"
+                    raise Exception(err)
+                try: 
+                    self.separator_of_results_in_input_df = line[1]
+                    if  line[1] in prohibited_characters and line[2].upper() == "BRUTEFORCE":
+                        print("Bruteforce mode is on. This mode is not recommended for large datasets.")
+                except: raise Exception(f"line: {line}... Separator not valid")
 
             elif line[0].upper() == "#".upper():
                 pass
             else:
                 print(f"Command not recognized: {line[0]}. Check your config file for possible typos.")
+                raise Exception(f"line: {line}... Error in config file.")
 
         file.close()
 
@@ -180,10 +245,51 @@ class cfg:
         elif Path(path).suffix == ".tsv":
             self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
         else:
-            print(f"File format is not supported. Supported formats: {supported_formats}")
+            raise Exception(f"File format is not supported. Supported formats: {supported_formats}")
         
         if self.repair_input_df:
             self.__repair_input_df()
+
+    def reset_before_analysis(self, bruteforce = False):
+        """
+        Reset the class to default values before running a new analysis.
+
+        Args:
+            bruteforce (bool): Whether to use brute force mode (default is False).
+
+        Note:
+            This method resets the class to default values before running a new analysis.
+        """
+        if self.__check_if_input_df_changed():
+            print("#"*200)
+            print("Resetting dataframes to default values before running a new analysis")
+            if bruteforce:
+                self.input_df = None
+                self.__load_input_df()
+                print("Input dataframe was reloaded - BRUTEFORCE mode is on")
+
+            else: 
+                for db in self.data_info: 
+                    self.input_df[db["results_column"]] = np.nan
+                
+
+            print("Reset was successfuly done")
+            print("Analysing the data...")
+            print("#"*200)
+
+    def __check_if_input_df_changed(self) -> bool:
+        """
+        Check if the input DataFrame has been changed.
+
+        Returns:
+            bool: True if the input DataFrame has been changed, False otherwise.
+
+        Note:
+            This method is used to check if the input DataFrame has been changed since
+            the last analysis.
+        """
+
+        return not all([pd.isnull(self.input_df[self.data_info[i]["results_column"]]).all() for i in range(len(self.data_info))])
 
     def __repair_input_df(self):
         """
@@ -217,9 +323,7 @@ class cfg:
             data from a specific database.
         """
         result_column_name = self.data_info[database_index]["results_column"]
-        for i in range(len(self.input_df)):
-            if pd.isnull(self.input_df.loc[i, result_column_name]):
-                self.input_df.loc[i, result_column_name] = "False"
+        self.input_df[result_column_name].fillna(value="False", inplace=True)
 
     @staticmethod
     def merge_all_identifiers(data_df: pd.DataFrame, identifier_column_names: list, output_sequence_index: int) -> str:
@@ -273,15 +377,14 @@ class cfg:
             identifier = os.path.basename(filename)
             s = "file_name"
 
-        else: identifier = self.merge_all_identifiers(data_df=data_df, identifier_column_names=identifier_column_names,
-                                                      output_sequence_index=output_sequence_index)
+        else: identifier = self.merge_all_identifiers(data_df=data_df, identifier_column_names=identifier_column_names,output_sequence_index=output_sequence_index)
 
         identifier = ";".join(set(identifier.split(sep=";")))
         if pd.isnull(input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]]):
-            input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = f"[seq: {sseq}{identifier}]\n"
+            input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = f"[seq: {sseq}{identifier}]" + self.separator_of_results_in_input_df
         else:
             input_df.loc[input_sequence_index, self.data_info[database_index]["results_column"]] = str(input_df[self.data_info[database_index]["results_column"]][input_sequence_index]) \
-                                                                                                        + f"[seq: {sseq}{identifier}]\n"
+                                                                                                        + f"[seq: {sseq}{identifier}]" + self.separator_of_results_in_input_df
 
         if self.show_report_while_inserting_match_to_input_df:
             input_sequence = input_df[self.input_file_info["sequence_column_name"]][input_sequence_index]

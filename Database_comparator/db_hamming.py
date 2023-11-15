@@ -31,13 +31,14 @@ class hamming_distance:
         self.query_sequences = (self.config.input_df[self.config.input_file_info["sequence_column_name"]]).tolist()
 
     # ------------------------------------Hamming distance--------------------------------------------
-    def analyze_all_hamming_matrices(self):
+    def analyze_all_hamming_matrices(self) -> pd.DataFrame:
         """
         Analyze Hamming distance matrices for all databases.
 
         Note:
             This method iterates over all databases and analyzes their respective Hamming distance matrices.
         """
+        self.config.reset_before_analysis()
         for i in range(len(self.hamming_matrices_for_all_databases)):
             if self.hamming_matrices_for_all_databases[i] is None:
                 return
@@ -46,6 +47,7 @@ class hamming_distance:
 
             self.analyze_single_hamming_matrix(data_df=data_df, database_index=i)
 
+        return self.config.input_df.copy(deep=True)
     def analyze_single_hamming_matrix(self, data_df: pd.DataFrame, database_index: int):
         """
         Analyze a single Hamming distance matrix for a specific database.
@@ -105,7 +107,7 @@ class hamming_distance:
 
         if analyze: self.analyze_single_hamming_matrix(data_df, database_index)
 
-    def find_hamming_distances_for_all_databases(self, analyze=True):
+    def find_hamming_distances_for_all_databases(self, analyze=True) -> pd.DataFrame:
         """
         Find Hamming distances for all databases.
 
@@ -115,5 +117,8 @@ class hamming_distance:
         Note:
             This method computes Hamming distances for all databases and can optionally analyze the results.
         """
+        self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
         for i in tqdm(range(len(self.config.data_info)), desc="Finding hamming distances for all databases"):
             self.find_hamming_distances_for_single_database(i, analyze=analyze)
+        if analyze:
+            return self.config.input_df.copy(deep=True)
