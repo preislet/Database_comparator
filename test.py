@@ -15,13 +15,11 @@ def profile(function, output_file):
 
 if __name__ == "__main__":
     db = reload()
-
-    cProfile.run("db.exact_match.exact_match_search_in_all_databases()")
-
+    profile("db.exact_match.exact_match_search_in_all_databases()", "exact_match_search_in_all_databases.txt")
     db = reload()
-
-    cProfile.run("db.exact_match.")
-
-
+    profile("db.aligner.smithWatermanAlgorithm_match_search_in_all_databases()", "smithWatermanAlgorithm_match_search_in_all_databases.txt")
+    db = reload()
+    profile("db.hamming_distances.find_hamming_distances_for_all_databases()", "hamming_distances_for_all_databases.txt")
+    print("Done")
 
     
