@@ -123,6 +123,7 @@ class FastHammingDistance:
         """
         Computes Hamming distances for all databases in parallel using multiprocessing.
         """
+        self.config.reset_before_analysis()
         for db_index in range(len(self.config.data_info)):
             self.find_hamming_distances_for_single_database_MULTIPROCESSING(db_index) 
 

@@ -9,7 +9,6 @@ from Bio import Align
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# TODO udělat kontrolu formátu pro databaze - zatím je podporován jen .csv formát => rozšířit podporované formáty
 # TODO updatovat README o nové parametry v config file (swa_mode, matice)
 
 StopCodon = "#"
@@ -74,13 +73,23 @@ class cfg:
             self.ns = mp.Manager().Namespace()
         except:
             raise Exception("Multiprocessing is not supported on this system. Exception was raised do to >>>mp.Manager().Namespace()<<<. Comparator must be used under if __name__ == '__main__':")
-
-        self.__load_config(config_file)
-
+        
         # dataframe of input file
-        self.separator_of_results_in_input_df = "\n"
         self.repair_input_df = True
         self.input_df = None
+        self.separator_of_results_in_input_df = "\n"
+
+
+        # Config file - supported .txt and .xlsx
+        config_file_suffix = Path(config_file).suffix
+
+        if config_file_suffix not in [".txt", ".xlsx"]: raise Exception(f"Unsupported config file format: {config_file_suffix}. Supported formats: .txt, .xlsx")
+        
+        if config_file_suffix == ".xlsx": self.__load_config_xlsx(config_file)
+        else:
+            print("Loading configuration settings from the provided .txt file. We recommend using .xlsx file for better readability")
+            self.__load_config_txt(config_file)
+
         self.__load_input_df()
 
     def __str__(self) -> str:
@@ -111,7 +120,7 @@ class cfg:
         return ""
     
     
-    def __load_config(self, config_file):
+    def __load_config_txt(self, config_file):
         """
         Load configuration settings from the specified file.
 
@@ -139,7 +148,7 @@ class cfg:
                     data = {
                         "path": line[1],
                         "sequence_column_name": line[2],
-                        "results_column": line[1][:-4],
+                        "results_column": line[1],
                         "identifier_of_seq": "".join(line[3:]).strip('][').split(',')
                     }
                     self.data_info.append(data)
@@ -199,11 +208,10 @@ class cfg:
                     err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
                     raise Exception(err) 
                 self.aligner.substitution_matrix = Align.substitution_matrices.load(line[1])
-            elif line[0].upper == "SWA_mode".upper():
+            elif line[0].upper() == "SWA_mode".upper():
                 if not line[1].lower in ["local", "global"]:
                     err = "Mode not found. Please use only global/local"
                     raise Exception(err)
-                
                 self.aligner.mode = line[1].lower()
 
             elif line[0].upper() == "separator".upper():
@@ -219,11 +227,132 @@ class cfg:
 
             elif line[0].upper() == "#".upper():
                 pass
+
             else:
                 print(f"Command not recognized: {line[0]}. Check your config file for possible typos.")
                 raise Exception(f"line: {line}... Error in config file.")
 
         file.close()
+
+    def __load_config_xlsx(self, config_file):
+        def transform_dataframe(df):
+            df = df.T.reset_index(drop=True)
+            df.columns = df.iloc[0]
+            df = df.iloc[1:, :].reset_index(drop=True)
+
+            return df
+
+
+        try:
+            df = pd.read_excel(config_file, sheet_name="Query")
+        except FileNotFoundError:
+            raise Exception(f"Configuration file not found: {config_file}")
+        except Exception as e:
+            raise Exception(f"Error loading Excel file: {e}")
+        
+        
+
+        # -------------- Query --------------
+        query_table = df.iloc[0:2].dropna(how="all", axis=1).reset_index(drop=True)
+        query_table.columns = query_table.iloc[0]
+        query_table = query_table.iloc[1:, 1:]
+        query_table = query_table.reset_index(drop=True)
+
+        self.input_file_path = query_table["Path"][0]
+        self.input_file_info = {
+            "path": self.input_file_path,
+            "sequence_column_name": query_table["Sequence_column"][0],
+            "starting_row": 0
+        }
+
+        # -------------- Databases --------------
+        database_table = df.iloc[4:24].dropna(how="all", axis=1).reset_index(drop=True)
+        database_table.columns = database_table.iloc[0]
+        database_table = database_table.iloc[1:, 1:]
+        database_table = database_table.reset_index(drop=True)
+        
+        for i in range(len(database_table)):
+            if pd.isnull(database_table["Path"][i]): break
+
+            identifier_columns_values = database_table.iloc[i, 2:].dropna().tolist()
+
+            data = {
+                "path": database_table["Path"][i],
+                "sequence_column_name": database_table["Sequence_column"][i],
+                "results_column": database_table["Path"][i],
+                "identifier_of_seq": identifier_columns_values
+            }
+
+            self.data_info.append(data)
+
+        # -------------- Settings --------------
+        settings_table = df.iloc[25:27].dropna(how="all", axis=1).reset_index(drop=True)
+        settings_table = transform_dataframe(settings_table)
+
+        if not pd.isnull(settings_table["Separator"][0]): self.separator_of_results_in_input_df = settings_table["Separator"][0]
+        if not pd.isnull(settings_table["Number_of_processors"][0]): self.number_of_processors = settings_table["Number_of_processors"][0]
+
+
+        # -------------- Aligner --------------
+
+        try:
+            Aligner_info = pd.read_excel(config_file, sheet_name="Aligner")
+        except FileNotFoundError:
+            raise Exception(f"Configuration file not found: {config_file}")
+        except Exception as e:
+            raise Exception(f"Error loading Excel file: {e}")
+
+        Aligner_info = transform_dataframe(Aligner_info)
+
+        if not pd.isnull(Aligner_info["SWA_tolerance"][0]): self.tolerance = Aligner_info["SWA_tolerance"][0]
+        if not pd.isnull(Aligner_info["SWA_gap_score"][0]):
+            self.aligner.open_gap_score = Aligner_info["SWA_gap_score"][0]
+            self.aligner.extend_gap_score = Aligner_info["SWA_gap_score"][0]
+
+        if not pd.isnull(Aligner_info["SWA_mismatch_score"][0]): self.aligner.mismatch_score = Aligner_info["SWA_mismatch_score"][0]
+        if not pd.isnull(Aligner_info["SWA_match_score"][0]): self.aligner.match_score = Aligner_info["SWA_match_score"][0]
+
+        try:
+            if not pd.isnull(Aligner_info["SWA_matrix"][0]): self.aligner.substitution_matrix = Align.substitution_matrices.load(Aligner_info["SWA_matrix"][0])
+
+        except Exception as e:
+            err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
+            raise Exception(err)
+        
+        if not pd.isnull(Aligner_info["SWA_mode"][0]):
+            if not Aligner_info["SWA_mode"][0].lower() in ["local", "global"]:
+                err = "Mode not found. Please use only global/local"
+                raise Exception(err)
+            self.aligner.mode = Aligner_info["SWA_mode"][0].lower()
+
+
+        # -------------- Hamming distance --------------
+        try:
+            Hamming_info = pd.read_excel(config_file, sheet_name="Hamming_distance")
+        except FileNotFoundError:
+            raise Exception(f"Configuration file not found: {config_file}")
+        except Exception as e:
+            raise Exception(f"Error loading Excel file: {e}")
+        
+        Hamming_info = transform_dataframe(Hamming_info)
+
+        if not pd.isnull(Hamming_info["Max_hamming_distance"][0]): self.max_hamming_distance = Hamming_info["Max_hamming_distance"][0]
+
+
+        # -------------- Blast --------------
+        try:
+            Blast_info = pd.read_excel(config_file, sheet_name="BLAST")
+        except FileNotFoundError:
+            raise Exception(f"Configuration file not found: {config_file}")
+        except Exception as e:
+            raise Exception(f"Error loading Excel file: {e}")
+        
+        Blast_info = transform_dataframe(Blast_info)
+
+        if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = Blast_info["BLAST_e_value"][0]
+        if not pd.isnull(Blast_info["BLAST_database_name"][0]): self.blast_database_name = Blast_info["BLAST_database_name"][0]
+        if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
+
 
     def __load_input_df(self):
         """
@@ -236,14 +365,26 @@ class cfg:
         supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
         path = self.input_file_info["path"]
         if Path(path).suffix == ".csv":
-            self.input_df = pd.DataFrame(pd.read_csv(self.input_file_info["path"]))
+            try:
+                self.input_df = pd.DataFrame(pd.read_csv(self.input_file_info["path"]))
+            except Exception as e:
+                raise Exception(f"Error loading csv file: {e}")
         elif Path(path).suffix in [".xlsx", ".xls"]:
-            self.input_df = pd.DataFrame(pd.read_excel(self.input_file_info["path"]))
+            try:
+                self.input_df = pd.DataFrame(pd.read_excel(self.input_file_info["path"]))
+            except Exception as e:
+                raise Exception(f"Error loading Excel file: {e}")
         elif Path(path).suffix in [".RData", ".Rbin", ".RDATA"]:
-            data = pr.read_r(path)
-            self.input_df = data[os.path.splitext(path)[0]]
+            try:
+                data = pr.read_r(path)
+                self.input_df = data[os.path.splitext(path)[0]]
+            except Exception as e:
+                raise Exception(f"Error loading R file: {e}")
         elif Path(path).suffix == ".tsv":
-            self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
+            try:
+                self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
+            except Exception as e:
+                raise Exception(f"Error loading tsv file: {e}")
         else:
             raise Exception(f"File format is not supported. Supported formats: {supported_formats}")
         
@@ -268,9 +409,7 @@ class cfg:
                 self.__load_input_df()
                 print("Input dataframe was reloaded - BRUTEFORCE mode is on")
 
-            else: 
-                for db in self.data_info: 
-                    self.input_df[db["results_column"]] = np.nan
+            else: self.input_df[[db["results_column"] for db in self.data_info]] = np.nan
                 
 
             print("Reset was successfuly done")
@@ -304,7 +443,7 @@ class cfg:
         self.input_df[self.input_file_info["sequence_column_name"]] = self.input_df[self.input_file_info["sequence_column_name"]].str.replace("(pre-)filtered", "")
         self.input_df[self.input_file_info["sequence_column_name"]] = self.input_df[self.input_file_info["sequence_column_name"]].str.replace(" ", "")
         # deleting sequences with stop codon
-        self.input_df = self.input_df[~self.input_df[self.input_file_info["sequence_column_name"]].astype(str).str.contains(StopCodon)]
+        self.input_df = self.input_df[~self.input_df[self.input_file_info["sequence_column_name"]].fillna("").str.contains(StopCodon)]
         self.input_df = self.input_df.reset_index(drop=True)
         self.input_df[self.input_file_info["sequence_column_name"]].fillna(value="********", inplace=True)
 
@@ -431,9 +570,9 @@ class cfg:
         Note:
             This method is used to locate a database by searching for a specific filename.
         """
-        for i in range(len(self.data_info)):
-            if filename in self.data_info[i]["path"]:
-                return i
+        for i, db in enumerate(self.data_info):
+                if filename in db["path"]: return i
+        raise ValueError(f"Database file '{filename}' not found in config.")
 
     def load_database(self, database_index = None, engine=None) -> pd.DataFrame:
 
@@ -444,18 +583,20 @@ class cfg:
         suffix = Path(path).suffix
         supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
 
-        columns = self.data_info[database_index]["identifier_of_seq"].extend([self.data_info[database_index]["sequence_column_name"]])
+        columns = self.data_info[database_index]["identifier_of_seq"] + [self.data_info[database_index]["sequence_column_name"]]
         print(f"Loading database: {os.path.basename(path)}, index: {database_index}")
 
         if suffix == ".csv":
-            return pd.DataFrame(pd.read_csv(path, engine=engine, usecols=columns))
+            return pd.DataFrame(pd.read_csv(path, engine=engine, usecols=columns, dtype=str))
         elif suffix in [".xlsx", ".xls"]:
-            return pd.DataFrame(pd.read_excel(path, engine=engine, usecols=columns))
+            return pd.DataFrame(pd.read_excel(path, engine=engine, usecols=columns, dtype=str))
+        elif suffix == ".tsv":
+            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine, usecols=columns, dtype=str))
         elif suffix in [".RData", ".Rbin", ".RDATA"]:
             data = pr.read_r(path, use_objects=columns)
             return data[os.path.splitext(path)[0]]
-        elif suffix == ".tsv":
-            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine, usecols=columns))
+        
+
         else:
             err = f"File format is not supported for database. Supported formats: {supported_formats}"
             raise Exception(err)

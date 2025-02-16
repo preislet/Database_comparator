@@ -33,12 +33,12 @@ class DB_comparator:
             and BLAST-based comparisons.
         """
         self.config = config_class.cfg(config_file)
-        self.exact_match = db_exact_match.exact_match(self.config)  # Done
+        self.exact_match = db_exact_match.ExactMatch(self.config)  # Done
         self.aligner = db_aligner.aligner(self.config)   # Done
         self.blast = db_blast.blast(self.config, self.aligner)  # Done
         self.hamming_distances = db_hamming.hamming_distance(self.config)  # Done
 
-        # Hamming distances without distance storing - Experimental
+        # Hamming distances without distance matrix - Experimental
         self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # Done
         # Place for new modules...
 

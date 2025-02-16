@@ -11,7 +11,7 @@ import Database_comparator.db_aligner as db_aligner
 FastaSeparator = "!"
 
 
-class blast:
+class Blast:
     """
     The blast class provides methods for performing BLAST (Basic Local Alignment Search Tool) searches
     and analyzing the results.
@@ -54,12 +54,9 @@ class blast:
             This method creates a BLAST database, including the generation of a fasta file from the provided data
             configurations and specified name.
         """
-        if not os.path.exists("Fasta_files"):
-            os.mkdir("./Fasta_files")
-        if not os.path.exists("./Query_files"):
-            os.mkdir("./Query_files")
-
-        fasta_file_name = f"Fasta_files/BLAST_fasta_file.fasta"
+        os.makedirs("Fasta_files", exist_ok=True)
+        os.makedirs("Query_files", exist_ok=True)
+        fasta_file_name = "Fasta_files/BLAST_fasta_file.fasta"
 
         if not os.path.exists(fasta_file_name) or force:
             fasta_maker = Fasta_maker.Fasta_maker(
@@ -72,8 +69,7 @@ class blast:
 
             fasta_maker.make_file()
         cline = NcbimakeblastdbCommandline(dbtype="prot", input_file=fasta_file_name, input_type="fasta", title=name, max_file_sz="2GB", out=self.config.blast_database_full_name)
-        try: cline()
-        except: raise Exception("Error in creating blast database")
+        cline()
 
     def blast_search_for_match_in_database(self, query=None):
         """
@@ -99,15 +95,11 @@ class blast:
             fasta_maker.make_query()
             query = self.config.blast_default_input_query
 
-        blast_in = query
-        blast_out = self.config.blast_output_name
-        blastp_cline = NcbiblastpCommandline(query=blast_in, db=self.config.blast_database_full_name, evalue=self.config.e_value, outfmt=self.config.blast_outfmt, out=blast_out)
-
-        try: blastp_cline()
-        except: raise Exception(f"Error in blasting against database {self.config.blast_database_full_name}")
-
-        print(f"Blasting done. Output: {blast_out}")
-        print("-" * 200)
+        blastp_cline = NcbiblastpCommandline(
+            query=query, db=self.config.blast_database_full_name,
+            evalue=self.config.e_value, outfmt=self.config.blast_outfmt,
+            out=self.config.blast_output_name)
+        blastp_cline()
 
     def blast_search_and_analyze_matches_in_database(self, query=None) -> pd.DataFrame:
         """
@@ -125,7 +117,7 @@ class blast:
 
         return self.config.input_df.copy(deep=True)
 
-    def blast_analyze_output_data(self) -> pd.DataFrame:
+    def blast_analyze_output_data(self) -> None:
         """
         Analyze the output data from a BLAST search and insert results into the input DataFrame.
 
@@ -135,14 +127,13 @@ class blast:
         """
         self.config.reset_before_analysis()
         columns_names = self.config.blast_outfmt.split()
-        data = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:])
-        data_df = pd.DataFrame(data).drop_duplicates(ignore_index=True)
+        data_df = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:]).drop_duplicates()
 
         for i in tqdm(range(len(data_df)), desc="Analyzing BLAST output data with aligner", colour="green"):
             if self.aligner.align_sequences(data_df["qseq"][i], data_df["sseq"][i]):
                 self.__insert_blast_results_to_input_df(data_df, i)
-        return self.config.input_df.copy(deep=True)
-    # PRIVATE Blast algorithm
+
+
     def __insert_blast_results_to_input_df(self, data_df: pd.DataFrame, index):
         """
         Insert BLAST results into the input DataFrame.
@@ -159,16 +150,15 @@ class blast:
         labels = data_df["sseqid"][index].split(sep="!")
         sseq = str(data_df["sseq"][index])
 
-        if len(labels) == 2:
-            file_name, output_seq_identifier = labels[0], labels[1]
-        else:
-            file_name = labels[0]
-            output_seq_identifier = labels[0]
+        file_name = labels[0]
+        output_seq_identifier = labels[1] if len(labels) > 1 else labels[0]
         output_seq_identifier = ";".join(set(output_seq_identifier.split(sep=";")))
+
         database_index = self.config.find_database_index(filename=file_name)
-        if pd.isnull(self.config.input_df[self.config.data_info[database_index]["results_column"]][input_seq_index]):
-            self.config.input_df.loc[input_seq_index, self.config.data_info[database_index]["results_column"]] = f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
+        results_column = self.config.data_info[database_index]["results_column"]
+
+
+        if pd.isnull(self.config.input_df[results_column][input_seq_index]):
+            self.config.input_df.loc[input_seq_index, results_column] = f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
         else:
-            self.config.input_df.loc[input_seq_index, self.config.data_info[database_index]["results_column"]] = \
-                self.config.input_df[self.config.data_info[database_index]["results_column"]][input_seq_index] + f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
-    # ------------------------------------------------------------------------------------------------
+            self.config.input_df.loc[input_seq_index, results_column] += f"[seq: {sseq} identifier:{output_seq_identifier}]" + self.config.separator_of_results_in_input_df
