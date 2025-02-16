@@ -11,13 +11,13 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-VERSION = '1.0.4'
+VERSION = '1.0.5'
 DESCRIPTION = 'Bioinformatics tool for compering large sequence files'
 LONG_DESCRIPTION = 'Bioinformatics tool for compering large sequence files with exact matching, sequence alignment, BLAST searches,and calculating Hamming distances between sequences.'
 
 # Setting up
 setup(
-    name="Database_comparator",
+    name="database_comparator",  # Changed from "Database_comparator" to comply with PEP 625
     version=VERSION,
     author="preislet (Tomáš Preisler)",
     author_email="<tomas.preisler1@gmail.com>",
@@ -27,7 +27,7 @@ setup(
     packages=find_packages(),
     install_requires=requirements,
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta"
         "Intended Audience :: Science/Research",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",

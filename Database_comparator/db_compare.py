@@ -26,7 +26,6 @@ class DB_comparator:
 
         Args:
             config_file (str): Path to the configuration file.
-
         Note:
             This constructor initializes various database comparison components based on the
             configuration settings and provides the ability to perform exact matching, alignment,
@@ -34,13 +33,14 @@ class DB_comparator:
         """
         self.config = config_class.cfg(config_file)
         self.exact_match = db_exact_match.ExactMatch(self.config)  # Done
-        self.aligner = db_aligner.aligner(self.config)   # Done
-        self.blast = db_blast.blast(self.config, self.aligner)  # Done
-        self.hamming_distances = db_hamming.hamming_distance(self.config)  # Done
-
-        # Hamming distances without distance matrix - Experimental
-        self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # Done
+        self.aligner = db_aligner.Aligner(self.config)   # Done
+        self.blast = db_blast.Blast(self.config, self.aligner)  # Done
+        self.hamming_distances = db_hamming.hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead
+        self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # Hamming distances without distance matrix
         # Place for new modules...
+        # self.new_module = new_module.NewModule(self.config)
+        # TODO: Add fuzzy matching module (e.g., Levenshtein distance)
+
 
     def __str__(self) -> str:
         return str(self.config)

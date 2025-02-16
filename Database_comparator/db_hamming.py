@@ -4,6 +4,8 @@ from Database_comparator.config_class import cfg
 from tqdm import tqdm
 import numpy as np
 
+import warnings
+
 
 class hamming_distance:
     """
@@ -27,12 +29,11 @@ class hamming_distance:
             and precomputes data structures to store Hamming distance matrices for databases.
         """
         self.config = config
-
-
-        print("Warning:")
-        print("If you dont need full hamming distance matrix, use FastHammingDistance class. FastHammingDistance class is faster than HammingDistance class.")
-
-
+        
+        warnings.warn(
+            "If you don't need the full Hamming distance matrix, use FastHammingDistance class. "
+            "FastHammingDistance class is faster than HammingDistance class."
+        )
         self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
         self.query_sequences = (self.config.input_df[self.config.input_file_info["sequence_column_name"]]).tolist()
 
