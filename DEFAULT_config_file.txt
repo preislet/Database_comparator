@@ -2,8 +2,8 @@
 QUERY query.xlsx part3
 
 DB Databases/Nakayama.csv CDR3b [Clone/SequenceID, Epitope]
-DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]
-DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
+# DB Databases/McPAS-TCR-filtred.csv CDR3.beta.aa [PubMed.ID, Pathology, Additional.study.details]
+# DB Databases/vdjdb.csv cdr3 [antigen.gene, antigen.species, mhc.a, gene]
 # DB Databases/TCRdb_all_sequnces.csv AASeq [TCRDB_project_ID, RunId, cloneFraction]
 
 # separator of results
@@ -21,7 +21,7 @@ BLAST_database_name clip_seq_db
 BLAST_output_name blastp_output.txt
 
 # Hamming distance
-HD_max_distance 1
+HD_max_distance 3
 
 # Multiprocessing
 number_of_processors 3

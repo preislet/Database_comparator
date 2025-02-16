@@ -1,10 +1,14 @@
-import Database_comparator.db_exact_match as db_exact_match
-import Database_comparator.db_aligner as db_aligner
-import Database_comparator.db_blast as db_blast
-import Database_comparator.db_hamming as db_hamming
-import Database_comparator.config_class as config_class
+import db_exact_match as db_exact_match
+import db_aligner as db_aligner
+import db_blast as db_blast
+import db_hamming as db_hamming
+import config_class as config_class
+import db_fast_hamming as db_fast
 
 import warnings
+from Bio import BiopythonDeprecationWarning
+
+warnings.simplefilter(action='ignore', category=BiopythonDeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
@@ -33,6 +37,9 @@ class DB_comparator:
         self.aligner = db_aligner.aligner(self.config)   # Done
         self.blast = db_blast.blast(self.config, self.aligner)  # Done
         self.hamming_distances = db_hamming.hamming_distance(self.config)  # Done
+
+        # Hamming distances without distance storing - Experimental
+        self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # Done
         # Place for new modules...
 
     def __str__(self) -> str:
