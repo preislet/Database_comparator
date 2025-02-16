@@ -1,7 +1,6 @@
 # Databases
 *.csv
 *.tsv
-*.xlsx
 *.xls
 Databases/
 

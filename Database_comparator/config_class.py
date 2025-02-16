@@ -51,7 +51,7 @@ class cfg:
 
         # Smith–Waterman algorithm
         self.aligner = Align.PairwiseAligner()
-        self.tolerance = 0.93
+        self.tolerance: float = 0.93
 
         # Blastp Algorithm
         self.e_value = 0.05
@@ -289,8 +289,10 @@ class cfg:
         settings_table = df.iloc[25:27].dropna(how="all", axis=1).reset_index(drop=True)
         settings_table = transform_dataframe(settings_table)
 
-        if not pd.isnull(settings_table["Separator"][0]): self.separator_of_results_in_input_df = settings_table["Separator"][0]
-        if not pd.isnull(settings_table["Number_of_processors"][0]): self.number_of_processors = settings_table["Number_of_processors"][0]
+        if not pd.isnull(settings_table["Separator"][0]):     
+            self.separator_of_results_in_input_df = settings_table["Separator"][0]
+            if self.separator_of_results_in_input_df == "\\n": self.separator_of_results_in_input_df = "\n"
+        if not pd.isnull(settings_table["Number_of_processors"][0]): self.number_of_processors = int(settings_table["Number_of_processors"][0])
 
 
         # -------------- Aligner --------------
@@ -304,13 +306,13 @@ class cfg:
 
         Aligner_info = transform_dataframe(Aligner_info)
 
-        if not pd.isnull(Aligner_info["SWA_tolerance"][0]): self.tolerance = Aligner_info["SWA_tolerance"][0]
+        if not pd.isnull(Aligner_info["SWA_tolerance"][0]): self.tolerance = float(Aligner_info["SWA_tolerance"][0])
         if not pd.isnull(Aligner_info["SWA_gap_score"][0]):
-            self.aligner.open_gap_score = Aligner_info["SWA_gap_score"][0]
-            self.aligner.extend_gap_score = Aligner_info["SWA_gap_score"][0]
+            self.aligner.open_gap_score = float(Aligner_info["SWA_gap_score"][0])
+            self.aligner.extend_gap_score = float(Aligner_info["SWA_gap_score"][0])
 
-        if not pd.isnull(Aligner_info["SWA_mismatch_score"][0]): self.aligner.mismatch_score = Aligner_info["SWA_mismatch_score"][0]
-        if not pd.isnull(Aligner_info["SWA_match_score"][0]): self.aligner.match_score = Aligner_info["SWA_match_score"][0]
+        if not pd.isnull(Aligner_info["SWA_mismatch_score"][0]): self.aligner.mismatch_score = float(Aligner_info["SWA_mismatch_score"][0])
+        if not pd.isnull(Aligner_info["SWA_match_score"][0]): self.aligner.match_score = float(Aligner_info["SWA_match_score"][0])
 
         try:
             if not pd.isnull(Aligner_info["SWA_matrix"][0]): self.aligner.substitution_matrix = Align.substitution_matrices.load(Aligner_info["SWA_matrix"][0])
@@ -336,7 +338,7 @@ class cfg:
         
         Hamming_info = transform_dataframe(Hamming_info)
 
-        if not pd.isnull(Hamming_info["Max_hamming_distance"][0]): self.max_hamming_distance = Hamming_info["Max_hamming_distance"][0]
+        if not pd.isnull(Hamming_info["Max_hamming_distance"][0]): self.max_hamming_distance = int(Hamming_info["Max_hamming_distance"][0])
 
 
         # -------------- Blast --------------
@@ -349,7 +351,7 @@ class cfg:
         
         Blast_info = transform_dataframe(Blast_info)
 
-        if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = Blast_info["BLAST_e_value"][0]
+        if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = float(Blast_info["BLAST_e_value"][0])
         if not pd.isnull(Blast_info["BLAST_database_name"][0]): self.blast_database_name = Blast_info["BLAST_database_name"][0]
         if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
 

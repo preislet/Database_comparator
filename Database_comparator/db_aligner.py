@@ -101,8 +101,8 @@ class Aligner:
         """
         Align two sequences and determine whether they match.
         """
-        score = self.config.aligner.score(seqA, seqB)
-        max_score = (
+        score: float = self.config.aligner.score(seqA, seqB)
+        max_score: float = (
             max(self.config.aligner.score(seqA, seqA), self.config.aligner.score(seqB, seqB))
             if self.config.aligner.substitution_matrix is not None
             else max(len(seqA), len(seqB))
