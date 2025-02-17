@@ -6,15 +6,6 @@ from tqdm import tqdm
 from joblib import Parallel, delayed  # Efficient parallel processing
 
 
-import warnings
-warnings.simplefilter("ignore")
-
-
-from Bio import BiopythonWarning
-warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
-
-
-
 class Aligner:
     """
     The Aligner class provides methods for performing sequence alignments using the Smith-Waterman algorithm.

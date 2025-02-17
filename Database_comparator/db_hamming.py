@@ -6,7 +6,6 @@ import numpy as np
 
 
 
-
 class hamming_distance:
     """
     The hamming_distance class handles the computation and analysis of Hamming distances
@@ -29,11 +28,6 @@ class hamming_distance:
             and precomputes data structures to store Hamming distance matrices for databases.
         """
         self.config = config
-        
-        warnings.warn(
-            "If you don't need the full Hamming distance matrix, use FastHammingDistance class. "
-            "FastHammingDistance class is faster than HammingDistance class."
-        )
         self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
         self.query_sequences = (self.config.input_df[self.config.input_file_info["sequence_column_name"]]).tolist()
 

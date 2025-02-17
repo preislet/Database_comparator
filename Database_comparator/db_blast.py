@@ -2,18 +2,11 @@ import pandas as pd
 from tqdm import tqdm
 from Database_comparator.config_class import cfg
 import os
-from Bio.Blast.Applications import NcbiblastpCommandline
-from Bio.Blast.Applications import NcbimakeblastdbCommandline
+
+import subprocess
 
 import Database_comparator.Fasta_maker as Fasta_maker
 import Database_comparator.db_aligner as db_aligner
-
-
-import warnings
-warnings.simplefilter("ignore")
-
-from Bio import BiopythonWarning
-warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
 
 
 FastaSeparator = "!"
@@ -76,8 +69,14 @@ class Blast:
                 separator=FastaSeparator)
 
             fasta_maker.make_file()
-        cline = NcbimakeblastdbCommandline(dbtype="prot", input_file=fasta_file_name, input_type="fasta", title=name, max_file_sz="2GB", out=self.config.blast_database_full_name)
-        cline()
+
+        command = [
+        "makeblastdb", "-dbtype", "prot", "-in", fasta_file_name,
+        "-title", name, "-max_file_sz", "10GB", "-out", self.config.blast_database_full_name]
+    
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"BLAST database creation failed: {result.stderr}")
 
     def blast_search_for_match_in_database(self, query=None):
         """
@@ -103,11 +102,14 @@ class Blast:
             fasta_maker.make_query()
             query = self.config.blast_default_input_query
 
-        blastp_cline = NcbiblastpCommandline(
-            query=query, db=self.config.blast_database_full_name,
-            evalue=self.config.e_value, outfmt=self.config.blast_outfmt,
-            out=self.config.blast_output_name)
-        blastp_cline()
+        command = [
+        "blastp", "-query", query, "-db", self.config.blast_database_full_name,
+        "-evalue", str(self.config.e_value), "-outfmt", self.config.blast_outfmt,
+        "-out", self.config.blast_output_name]
+    
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise RuntimeError(f"BLAST search failed: {result.stderr}")
 
     def blast_search_and_analyze_matches_in_database(self, query=None) -> pd.DataFrame:
         """

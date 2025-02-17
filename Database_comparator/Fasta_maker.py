@@ -1,9 +1,6 @@
 import pandas as pd
 from tqdm import tqdm
 
-import warnings
-warnings.simplefilter("ignore")
-
 class Fasta_maker:
     """
     The Fasta_maker class provides methods for creating FASTA files from data frames and sequences.

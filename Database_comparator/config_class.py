@@ -4,10 +4,9 @@ import os
 import warnings
 from pathlib import Path
 import numpy as np
-from Bio import Align, BiopythonWarning
+from Bio import Align
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
-warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
 
 
 
@@ -37,48 +36,48 @@ class cfg:
             specified configuration file to customize the behavior of the program.
         """
         # Paths
-        self.input_file_path = None
-        self.blast_database_path = "BLAST_database"
-        self.blast_query_files_path = "Query_files"
+        self.input_file_path:str = None
+        self.blast_database_path:str = "BLAST_database"
+        self.blast_query_files_path:str = "Query_files"
 
         # Input data_info 
-        self.input_file_info = None
+        self.input_file_info:dict = None
         
         # Databases info list
-        self.data_info = []
+        self.data_info: list = []
 
         # Report switches
-        self.show_report_while_inserting_match_to_input_df = False
-        self.show_alignments = False
+        self.show_report_while_inserting_match_to_input_df: bool = False
+        self.show_alignments: bool = False
 
         # Smith–Waterman algorithm
-        self.aligner = Align.PairwiseAligner()
+        self.aligner: Align.PairwiseAligner = Align.PairwiseAligner()
         self.tolerance: float = 0.93
 
         # Blastp Algorithm
-        self.e_value = 0.05
-        self.blast_database_name = "clip_seq_db"
-        self.blast_database_full_name = self.blast_database_path + "//" + self.blast_database_name
-        self.blast_output_name = "blastp_output.txt"
-        self.blast_default_input_query = self.blast_query_files_path + "//QUERY.fasta"
+        self.e_value: float = 0.05
+        self.blast_database_name: str = "clip_seq_db"
+        self.blast_database_full_name: str = self.blast_database_path + "//" + self.blast_database_name
+        self.blast_output_name: str = "blastp_output.txt"
+        self.blast_default_input_query: str = self.blast_query_files_path + "//QUERY.fasta"
 
-        self.in_blast_database = self.data_info
-        self.blast_outfmt = "6 qseqid sseqid qseq sseq bitscore score"
+        self.in_blast_database: list = self.data_info
+        self.blast_outfmt: str = "6 qseqid sseqid qseq sseq bitscore score"
 
         # Hamming distance
-        self.max_hamming_distance = 1
+        self.max_hamming_distance: int = 1
 
         # Multiprocessing
-        self.number_of_processors = 1
+        self.number_of_processors: int = 1
 
         # dataframe of input file
-        self.repair_input_df = True
-        self.input_df = None
+        self.repair_input_df: bool = True
+        self.input_df: pd.DataFrame = None
         self.separator_of_results_in_input_df = "\n"
 
 
         # Config file - supported .txt and .xlsx
-        config_file_suffix = Path(config_file).suffix
+        config_file_suffix: str = Path(config_file).suffix
 
         if config_file_suffix not in [".txt", ".xlsx"]: raise Exception(f"Unsupported config file format: {config_file_suffix}. Supported formats: .txt, .xlsx")
         
@@ -87,33 +86,59 @@ class cfg:
             print("Loading configuration settings from the provided .txt file. We recommend using .xlsx file for better readability")
             self.__load_config_txt(config_file)
 
+
+        # Check if the number of processors is valid
+        if self.number_of_processors < 1: raise Exception("Number of processors must be at least 1")
+        if self.number_of_processors > os.cpu_count(): raise Exception(f"Number of processors must be at most {os.cpu_count()}")
+        if self.number_of_processors == os.cpu_count(): 
+            print(f"Number of processors is set to maximum: {os.cpu_count()}. This may slow down your computer.")
+
+
         self.__load_input_df()
 
     def __str__(self) -> str:
-        print("Configuration settings:")
-        print(f"Input file path: {self.input_file_path}")
-        print(f"Input file info: {self.input_file_info}")
-        print("-"*200)
-        print(f"Data info: {self.data_info}")
-        print("-"*200)
-        print(f"Aligner: {self.aligner}")
-        print(f"Tolerance: {self.tolerance}")
-        print("-"*200)
-        print(f"E-value: {self.e_value}")
-        print(f"Blast database name: {self.blast_database_name}")
-        print(f"Blast output name: {self.blast_output_name}")
-        print(f"Blast database full name: {self.blast_database_full_name}")
-        print(f"Blast default input query: {self.blast_default_input_query}")
-        print(f"Blast outfmt: {self.blast_outfmt}")
-        print("-"*200)
-        print(f"Max hamming distance: {self.max_hamming_distance}")
-        print("-"*200)
-        print(f"Number of processors: {self.number_of_processors}")
-        print("-"*200)
-        print(f"Separator of results in input df: {self.separator_of_results_in_input_df}")
-        print(f"Input df: {self.input_df}")
-        print("-"*200)
-        return ""
+        """
+        Return a formatted string representation of the configuration settings.
+        """
+        sections = [
+            ("General Configuration", [
+                f"Input file path: {self.input_file_path}",
+                f"Input file info: {self.input_file_info}",
+                f"Separator of results in input df: {self.separator_of_results_in_input_df}"
+            ]),
+            ("Database Information", [
+                f"Data info: {self.data_info}"
+            ]),
+            ("Alignment Settings", [
+                f"Aligner: {self.aligner}",
+                f"Tolerance: {self.tolerance}"
+            ]),
+            ("BLAST Settings", [
+                f"E-value: {self.e_value}",
+                f"BLAST database name: {self.blast_database_name}",
+                f"BLAST output name: {self.blast_output_name}",
+                f"BLAST database full name: {self.blast_database_full_name}",
+                f"BLAST default input query: {self.blast_default_input_query}",
+                f"BLAST output format: {self.blast_outfmt}"
+            ]),
+            ("Hamming Distance", [
+                f"Max hamming distance: {self.max_hamming_distance}"
+            ]),
+            ("Performance Settings", [
+                f"Number of processors: {self.number_of_processors}"
+            ]),
+            ("Input Data", [
+                f"DataFrame: {self.input_df}"
+            ])
+        ]
+
+        output = []
+        for title, items in sections:
+            output.append(f"{'#'*50}\n{title}:\n{'-'*50}")
+            output.extend(items)
+
+        return "\n".join(output)
+
     
     
     def __load_config_txt(self, config_file):
