@@ -1,6 +1,6 @@
 import pandas as pd
 from tqdm import tqdm
-from Database_comparator.config_class import cfg
+from config_class import cfg
 import os
 
 import subprocess
@@ -24,6 +24,9 @@ class Blast:
     def __init__(self, config: cfg, aligner: db_aligner.aligner) -> None:
         self.config = config
         self.aligner = aligner
+        self.config.logger.info("Blast class initialized.")
+
+
 
     # PUBLIC Blast algorithm
     def blast_database_info(self):
@@ -55,6 +58,8 @@ class Blast:
             This method creates a BLAST database, including the generation of a fasta file from the provided data
             configurations and specified name.
         """
+
+        self.config.logger.info(f"Creating BLAST database {name}.")
         os.makedirs("Fasta_files", exist_ok=True)
         os.makedirs("Query_files", exist_ok=True)
         fasta_file_name = "Fasta_files/BLAST_fasta_file.fasta"
@@ -76,7 +81,10 @@ class Blast:
     
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
+            self.config.logger.error(f"BLAST database creation failed: {result.stderr}")
             raise RuntimeError(f"BLAST database creation failed: {result.stderr}")
+        
+        self.config.logger.info(f"BLAST database {name} created.")
 
     def blast_search_for_match_in_database(self, query=None):
         """
@@ -89,7 +97,8 @@ class Blast:
             This method performs a BLAST search against the specified database, using the provided query sequence
             or the default input query.
         """
-        print(f"Blasting against {self.config.blast_database_full_name}")
+
+        self.config.logger.info(f"Performing BLAST search. Blasting against {self.config.blast_database_full_name}")
 
         if query is None:
             fasta_maker = Fasta_maker.Fasta_maker(
@@ -109,7 +118,10 @@ class Blast:
     
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
+            self.config.logger.error(f"BLAST search failed: {result.stderr}")
             raise RuntimeError(f"BLAST search failed: {result.stderr}")
+        
+        self.config.logger.info("BLAST search completed.")
 
     def blast_search_and_analyze_matches_in_database(self, query=None) -> pd.DataFrame:
         """
@@ -135,6 +147,8 @@ class Blast:
             This method analyzes the output data from a previous BLAST search and inserts matching results
             into the input DataFrame using the specified aligner and configuration settings.
         """
+
+        self.config.logger.info("Analyzing BLAST output data with aligner.")
         self.config.reset_before_analysis()
         columns_names = self.config.blast_outfmt.split()
         data_df = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:]).drop_duplicates()
@@ -143,7 +157,8 @@ class Blast:
             if self.aligner.align_sequences(data_df["qseq"][i], data_df["sseq"][i]):
                 self.__insert_blast_results_to_input_df(data_df, i)
 
-
+        self.config.logger.info("BLAST output data analyzed and inserted into the input DataFrame.")
+        
     def __insert_blast_results_to_input_df(self, data_df: pd.DataFrame, index):
         """
         Insert BLAST results into the input DataFrame.

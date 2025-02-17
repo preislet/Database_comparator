@@ -1,4 +1,5 @@
 # Database comparator
+
 [![PyPI version](https://badge.fury.io/py/Database-comparator.svg)](https://badge.fury.io/py/Database-comparator)
 [![Downloads](https://pepy.tech/badge/database-comparator)](https://pepy.tech/project/database-comparator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

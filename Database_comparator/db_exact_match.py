@@ -1,4 +1,4 @@
-from Database_comparator.config_class import cfg
+from config_class import cfg
 import pandas as pd
 import numpy as np
 import multiprocessing as mp
@@ -30,7 +30,8 @@ class ExactMatch:
         self.data_df = None  # Placeholder for the loaded database DataFrame
         self.original_indices = self.config.input_df.index.values  # Store original indices to preserve mapping
 
-    # PUBLIC Exact search
+        self.config.logger.info("Exact Match class initialized.")
+
     def exact_match_search_in_single_database(self, database_index: int, parallel=False) -> None:
         """
         Perform an exact match search in a single database.
@@ -46,7 +47,10 @@ class ExactMatch:
             This method performs an exact match search in a single database and can optionally use parallel processing.
             Matching results are inserted into the input DataFrame using the configuration settings.
         """
+
+        self.config.logger.info(f"Performing exact match search in database {database_index}.")
         if parallel:
+            self.config.logger.info("Switching to multiprocessing mode.")
             self.exact_match_search_in_single_database_MULTIPROCESSING(database_index=database_index)
             return
 
@@ -54,7 +58,7 @@ class ExactMatch:
         data_sequences = np.array(self.data_df[self.config.data_info[database_index]["sequence_column_name"]], dtype=object)
 
 
-        for i in tqdm(range(len(self.query_sequences)), desc=f"Database {database_index} Exact Match"):
+        for i in tqdm(enumerate(self.query_sequences), desc=f"Database {database_index} Exact Match"):
             matches = np.where(data_sequences == self.query_sequences[i])[0]
             for j in matches:
                 self.config.insert_match_to_input_df(
@@ -64,13 +68,17 @@ class ExactMatch:
                     output_sequence_index=j
                 )
 
+        self.config.logger.info(f"Exact match search in database {database_index} completed.")
+
 
     def exact_match_search_in_all_databases(self, parallel=False) -> None:
         """
         Finds exact matches for query sequences across all databases.
         """
+        self.config.reset_before_analysis()
+        self.config.logger.info("Performing exact match search in all databases.")
         for db_index in range(len(self.config.data_info)):
-            self.find_exact_matches_for_single_database(database_index=db_index, parallel=parallel)
+            self.exact_match_search_in_single_database(database_index=db_index, parallel=parallel)
 
 
     def exact_match_search_in_single_database_MULTIPROCESSING(self, database_index: int) -> None:
@@ -84,6 +92,8 @@ class ExactMatch:
             This method performs an exact match search in a single database using multiprocessing.
             Matching results are inserted into the input DataFrame using the configuration settings.
         """
+
+        self.config.logger.info(f"Performing exact match search in database {database_index} using multiprocessing.")
         self.data_df = self.config.load_database(database_index=database_index, engine="python")
         data_sequences = np.array(self.data_df[self.config.data_info[database_index]["sequence_column_name"]], dtype=object)
         
@@ -97,6 +107,7 @@ class ExactMatch:
             for chunk, indices in input_chunks
         )
 
+        self.config.logger.info("Procesing output chunks...")
         for result in results:
             for i, j in result:
                 self.config.insert_match_to_input_df(
@@ -106,13 +117,16 @@ class ExactMatch:
                     output_sequence_index=j
                 )
 
+        self.config.logger.info(f"Exact match search in database {database_index} completed using multiprocessing.")
+
     def exact_match_search_in_all_databases_MULTIPROCESSING(self) -> None:
         """
         Finds exact matches for query sequences across all databases in parallel.
         """
         self.config.reset_before_analysis()
+        self.config.logger.info("Performing exact match search in all databases using multiprocessing.")
         for db_index in range(len(self.config.data_info)):
-            self.find_exact_matches_for_single_database_MULTIPROCESSING(db_index) 
+            self.exact_match_search_in_single_database_MULTIPROCESSING(db_index) 
 
     def process_chunk(self, query_chunk, original_indices, data_sequences, database_index):
         """

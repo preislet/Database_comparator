@@ -1,5 +1,5 @@
 import pandas as pd
-from Database_comparator.config_class import cfg
+from config_class import cfg
 import multiprocessing as mp
 from tqdm import tqdm
 import numpy as np
@@ -23,6 +23,8 @@ class FastHammingDistance:
         self.query_sequences = np.array(self.config.input_df[self.config.input_file_info["sequence_column_name"]].tolist(), dtype=object)
         self.data_df = None  # Placeholder for the loaded database DataFrame
         self.original_indices = self.config.input_df.index.values  # Store original indices to preserve mapping
+
+        self.config.logger.info("Fast Hamming distance initialized.")
 
     def __find_hamming_distance(self, query_seq: str, data_seq: str) -> int:
         """
@@ -58,7 +60,10 @@ class FastHammingDistance:
             database_index (int): Index of the database to process.
             parallel (bool): Whether to use parallel processing (default: True).
         """
+
+        self.config.logger.info("Computing Hamming distances for database " + str(database_index) + "...")
         if parallel:
+            self.config.logger.info("Switching to multiprocessing mode.")
             self.find_hamming_distances_for_single_database_MULTIPROCESSING(database_index)
             return
 
@@ -78,11 +83,16 @@ class FastHammingDistance:
                         input_sequence_index=i,
                         output_sequence_index=j
                     )
+
+        self.config.logger.info(f"Hamming distances for database {database_index} completed.")
         
     def find_hamming_distances_for_all_databases(self, parallel=False) -> None:
         """
         Computes Hamming distances for all databases sequentially or in parallel.
         """
+
+        self.config.reset_before_analysis()
+        self.config.logger.info("Computing Hamming distances for all databases.")
         for db_index in range(len(self.config.data_info)):
             self.find_hamming_distances_for_single_database(database_index=db_index, parallel=parallel)
 
@@ -94,6 +104,8 @@ class FastHammingDistance:
         Args:
             database_index (int): Index of the database to process.
         """
+
+        self.config.logger.info(f"Computing Hamming distances for database {database_index} using multiprocessing.")
         self.data_df = self.config.load_database(database_index=database_index, engine="python")
         data_sequences = np.array(self.data_df[self.config.data_info[database_index]["sequence_column_name"]], dtype=object)
         
@@ -108,6 +120,8 @@ class FastHammingDistance:
         )
 
         # Store matching sequences in the input DataFrame
+
+        self.config.logger.info("Procesing output chunks...")
         for result in results:
             for i, j in result:
                 self.config.insert_match_to_input_df(
@@ -116,13 +130,14 @@ class FastHammingDistance:
                     input_sequence_index=i,
                     output_sequence_index=j
                 )
-
+        self.config.logger.info(f"Hamming distances for database {database_index} completed using multiprocessing.")
 
     def find_hamming_distances_for_all_databases_MULTIPROCESSING(self) -> None:
         """
         Computes Hamming distances for all databases in parallel using multiprocessing.
         """
         self.config.reset_before_analysis()
+        self.config.logger.info("Computing Hamming distances for all databases using multiprocessing.")
         for db_index in range(len(self.config.data_info)):
             self.find_hamming_distances_for_single_database_MULTIPROCESSING(db_index) 
 

@@ -5,7 +5,7 @@ import warnings
 from pathlib import Path
 import numpy as np
 
-
+import logging
 from Bio import Align
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -22,7 +22,7 @@ class cfg:
         This constructor initializes various parameters and loads settings from the
         specified configuration file to customize the behavior of the program.
     """
-    def __init__(self, config_file=None) -> None:
+    def __init__(self, config_file=None, show_log_in_console:bool = False) -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -33,6 +33,31 @@ class cfg:
             This constructor initializes various parameters and loads settings from the
             specified configuration file to customize the behavior of the program.
         """
+        # Logging
+
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
+        # Create file handler and console handler
+        log_file = "DB_comparator_run.log"
+        file_handler = logging.FileHandler(log_file, mode='w')
+        file_handler.setLevel(logging.DEBUG)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.INFO)
+
+        # Define log format
+        log_format = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        file_handler.setFormatter(log_format)
+        
+        
+        if show_log_in_console: console_handler.setFormatter(log_format)
+
+        # Add handlers to the logger
+        self.logger.addHandler(file_handler)
+        if show_log_in_console: self.logger.addHandler(console_handler)
+
+        self.logger.info("Initializing configuration class.")
+
         # Paths
         self.input_file_path:str = None
         self.blast_database_path:str = "BLAST_database"
@@ -77,21 +102,28 @@ class cfg:
         # Config file - supported .txt and .xlsx
         config_file_suffix: str = Path(config_file).suffix
 
-        if config_file_suffix not in [".txt", ".xlsx"]: raise Exception(f"Unsupported config file format: {config_file_suffix}. Supported formats: .txt, .xlsx")
+        if config_file_suffix not in [".txt", ".xlsx"]: 
+            self.logger.error(f"Unsupported config file format: {config_file_suffix}. Supported formats: .txt, .xlsx")
+            raise Exception(f"Unsupported config file format: {config_file_suffix}. Supported formats: .txt, .xlsx")
         
         if config_file_suffix == ".xlsx": self.__load_config_xlsx(config_file)
         else:
-            print("Loading configuration settings from the provided .txt file. We recommend using .xlsx file for better readability")
+            self.logger.warning("Loading configuration from .txt file. Consider using .xlsx for better readability.")
             self.__load_config_txt(config_file)
 
-
         # Check if the number of processors is valid
-        if self.number_of_processors < 1: raise Exception("Number of processors must be at least 1")
-        if self.number_of_processors > os.cpu_count(): raise Exception(f"Number of processors must be at most {os.cpu_count()}")
+        if self.number_of_processors < 1:
+            self.logger.error("Number of processors must be at least 1") 
+            raise Exception("Number of processors must be at least 1")
+        
+        if self.number_of_processors > os.cpu_count(): 
+            self.logger.error(f"Number of processors must be at most {os.cpu_count()}")
+            raise Exception(f"Number of processors must be at most {os.cpu_count()}")
+        
         if self.number_of_processors == os.cpu_count(): 
-            print(f"Number of processors is set to maximum: {os.cpu_count()}. This may slow down your computer.")
+            self.logger.warning(f"Number of processors is set to maximum: {os.cpu_count()}. This may slow down your computer.")
 
-
+        self.logger.info("Configuration class initialized.")
         self.__load_input_df()
 
     def __str__(self) -> str:
@@ -132,13 +164,12 @@ class cfg:
 
         output = []
         for title, items in sections:
-            output.append(f"{'#'*50}\n{title}:\n{'-'*50}")
+            output.append(f"{'-'*50}\n{title}:\n")
             output.extend(items)
 
         return "\n".join(output)
 
-    
-    
+
     def __load_config_txt(self, config_file):
         """
         Load configuration settings from the specified file.
@@ -153,6 +184,8 @@ class cfg:
         if config_file is None:
             print("A configuration file was not provided. Please provide the configuration file and restart the program")
             print("See the documentation for more information: https://pypi.org/project/Database-comparator")
+
+            self.logger.error("Configuration file was not provided.")
             raise Exception("Configuration file was not provided")
         
         file = open(config_file, 'r')
@@ -171,7 +204,9 @@ class cfg:
                         "identifier_of_seq": "".join(line[3:]).strip('][').split(',')
                     }
                     self.data_info.append(data)
-                except: raise Exception(f"line: {line}... Database path, sequence column name or results column name is missing. Please check your config file.")
+                except: 
+                    self.logger.error(f"line: {line}... Database path, sequence column name or results column name is missing. Please check your config file.")
+                    raise Exception(f"line: {line}... Database path, sequence column name or results column name is missing. Please check your config file.")
 
             elif line[0].upper() == "QUERY":
                 try:
@@ -182,54 +217,76 @@ class cfg:
                         "starting_row": 0
                     }
                 except:
+                    self.logger.error(f"line: {line}... Input file path or sequence column name is missing. Please check your config file.")
                     raise Exception(f"line: {line}... Input file path or sequence column name is missing. Please check your config file.")
                 
             elif line[0].upper() == "SWA_tolerance".upper(): 
                 try: self.tolerance = float(line[1])
-                except: raise Exception(f"line: {line}... Tolerance must be float")
+                except: 
+                    self.logger.error(f"line: {line}... Tolerance must be float")
+                    raise Exception(f"line: {line}... Tolerance must be float")
 
             elif line[0].upper() == "SWA_gap_score".upper():
                 try: 
                     self.aligner.open_gap_score = float(line[1])
                     self.aligner.extend_gap_score = float(line[1])
 
-                except: raise Exception(f"line: {line}... Gap score must be float")
+                except: 
+                    self.logger.error(f"line: {line}... Gap score must be float")   
+                    raise Exception(f"line: {line}... Gap score must be float")
+                
             elif line[0].upper() == "SWA_mismatch_score".upper():
                 try: self.aligner.mismatch_score = float(line[1])
-                except: raise Exception(f"line: {line}... Mismatch score must be float")
+                except: 
+                    self.logger.error(f"line: {line}... Mismatch score must be float")
+                    raise Exception(f"line: {line}... Mismatch score must be float")
 
             elif line[0].upper() == "SWA_match_score".upper():
                 try: self.aligner.match_score = float(line[1])
-                except: raise Exception(f"line: {line}... Match score must be float")
+                except: 
+                    self.logger.error(f"line: {line}... Match score must be float")
+                    raise Exception(f"line: {line}... Match score must be float")
 
             elif line[0].upper() == "BLAST_e_value".upper():
                 try: self.e_value = float(line[1])
-                except: raise Exception(f"line: {line}... E-value must be float")
+                except: 
+                    self.logger.error(f"line: {line}... E-value must be float")
+                    raise Exception(f"line: {line}... E-value must be float")
 
             elif line[0].upper() == "BLAST_database_name".upper():
                 try: self.blast_database_name = line[1]
-                except: raise Exception(f"line: {line}... BLAST database name must be string")
+                except: 
+                    self.logger.error(f"line: {line}... BLAST database name must be string")
+                    raise Exception(f"line: {line}... BLAST database name must be string")
 
             elif line[0].upper() == "BLAST_output_name".upper():
                 try: self.blast_output_name = line[1]
-                except: raise Exception(f"line: {line}... BLAST output name must be string")
+                except: 
+                    self.logger.error(f"line: {line}... BLAST output name must be string")
+                    raise Exception(f"line: {line}... BLAST output name must be string")
 
             elif line[0].upper() == "HD_max_distance".upper():
                 try: self.max_hamming_distance = int(line[1])
-                except: raise Exception(f"line: {line}... Max hamming distance must be integer")
+                except: 
+                    self.logger.error(f"line: {line}... Max hamming distance must be integer")
+                    raise Exception(f"line: {line}... Max hamming distance must be integer")
 
             elif line[0].upper() == "number_of_processors".upper():
                 try: self.number_of_processors = int(line[1])
-                except: raise Exception(f"line: {line}... Number of processors must be integer")
+                except: 
+                    self.logger.error(f"line: {line}... Number of processors must be integer")
+                    raise Exception(f"line: {line}... Number of processors must be integer")
 
             elif line[0].upper() == "SWA_matrix".upper():
                 if not line[1] in Align.substitution_matrices.load():
                     err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
+                    self.logger.error(err)
                     raise Exception(err) 
                 self.aligner.substitution_matrix = Align.substitution_matrices.load(line[1])
             elif line[0].upper() == "SWA_mode".upper():
                 if not line[1].lower in ["local", "global"]:
                     err = "Mode not found. Please use only global/local"
+                    self.logger.error(err)
                     raise Exception(err)
                 self.aligner.mode = line[1].lower()
 
@@ -237,21 +294,26 @@ class cfg:
                 prohibited_characters = [",", ";", ":", "\t", " "]
                 if line[1] in prohibited_characters and line[2].upper() != "BRUTEFORCE":
                     err = f"Separator cannot be {line[1]}. Prohibited characters: {prohibited_characters}. If you want to use one of these characters, please use the following format: <SEPARATOR prohibited_char BRUTEFORCE>"
+                    self.logger.error(err)
                     raise Exception(err)
                 try: 
                     self.separator_of_results_in_input_df = line[1]
                     if  line[1] in prohibited_characters and line[2].upper() == "BRUTEFORCE":
                         print("Bruteforce mode is on. This mode is not recommended for large datasets.")
-                except: raise Exception(f"line: {line}... Separator not valid")
+                except: 
+                    self.logger.error(f"line: {line}... Separator not valid")
+                    raise Exception(f"line: {line}... Separator not valid")
 
             elif line[0].upper() == "#".upper():
                 pass
 
             else:
-                print(f"Command not recognized: {line[0]}. Check your config file for possible typos.")
+                self.logger.error(f"line: {line}... Error in config file.")
                 raise Exception(f"line: {line}... Error in config file.")
-
+        
         file.close()
+
+        self.logger.info("Configuration from txt file loaded successfully.")
 
     def __load_config_xlsx(self, config_file):
         def transform_dataframe(df):
@@ -264,9 +326,12 @@ class cfg:
 
         try:
             df = pd.read_excel(config_file, sheet_name="Query")
+            self.logger.info("Query sheet loaded successfully.")
         except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {config_file}")
             raise Exception(f"Configuration file not found: {config_file}")
         except Exception as e:
+            self.logger.error(f"Error loading Excel file: {e}")
             raise Exception(f"Error loading Excel file: {e}")
         
         
@@ -319,8 +384,10 @@ class cfg:
         try:
             Aligner_info = pd.read_excel(config_file, sheet_name="Aligner")
         except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {config_file}")
             raise Exception(f"Configuration file not found: {config_file}")
         except Exception as e:
+            self.logger.error(f"Error loading Excel file: {e}")
             raise Exception(f"Error loading Excel file: {e}")
 
         Aligner_info = transform_dataframe(Aligner_info)
@@ -338,11 +405,13 @@ class cfg:
 
         except Exception as e:
             err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
+            self.logger.error(err)
             raise Exception(err)
         
         if not pd.isnull(Aligner_info["SWA_mode"][0]):
             if not Aligner_info["SWA_mode"][0].lower() in ["local", "global"]:
                 err = "Mode not found. Please use only global/local"
+                self.logger.error(err)
                 raise Exception(err)
             self.aligner.mode = Aligner_info["SWA_mode"][0].lower()
 
@@ -351,8 +420,10 @@ class cfg:
         try:
             Hamming_info = pd.read_excel(config_file, sheet_name="Hamming_distance")
         except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {config_file}")
             raise Exception(f"Configuration file not found: {config_file}")
         except Exception as e:
+            self.logger.error(f"Error loading Excel file: {e}")
             raise Exception(f"Error loading Excel file: {e}")
         
         Hamming_info = transform_dataframe(Hamming_info)
@@ -364,8 +435,10 @@ class cfg:
         try:
             Blast_info = pd.read_excel(config_file, sheet_name="BLAST")
         except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {config_file}")
             raise Exception(f"Configuration file not found: {config_file}")
         except Exception as e:
+            self.logger.error(f"Error loading Excel file: {e}")
             raise Exception(f"Error loading Excel file: {e}")
         
         Blast_info = transform_dataframe(Blast_info)
@@ -373,6 +446,8 @@ class cfg:
         if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = float(Blast_info["BLAST_e_value"][0])
         if not pd.isnull(Blast_info["BLAST_database_name"][0]): self.blast_database_name = Blast_info["BLAST_database_name"][0]
         if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
+
+        self.logger.info("Configuration from xlsx file loaded successfully.")
 
 
     def __load_input_df(self):
@@ -389,28 +464,35 @@ class cfg:
             try:
                 self.input_df = pd.DataFrame(pd.read_csv(self.input_file_info["path"]))
             except Exception as e:
+                self.logger.error(f"Error loading csv file: {e}")
                 raise Exception(f"Error loading csv file: {e}")
         elif Path(path).suffix in [".xlsx", ".xls"]:
             try:
                 self.input_df = pd.DataFrame(pd.read_excel(self.input_file_info["path"]))
             except Exception as e:
+                self.logger.error(f"Error loading Excel file: {e}")
                 raise Exception(f"Error loading Excel file: {e}")
         elif Path(path).suffix in [".RData", ".Rbin", ".RDATA"]:
             try:
                 data = pr.read_r(path)
                 self.input_df = data[os.path.splitext(path)[0]]
             except Exception as e:
+                self.logger.error(f"Error loading R file: {e}")
                 raise Exception(f"Error loading R file: {e}")
         elif Path(path).suffix == ".tsv":
             try:
                 self.input_df =  pd.DataFrame(pd.read_csv(self.input_file_info["path"], sep="\t"))
             except Exception as e:
+                self.logger.error(f"Error loading tsv file: {e}")
                 raise Exception(f"Error loading tsv file: {e}")
         else:
+            self.logger.error(f"File format is not supported. Supported formats: {supported_formats}")
             raise Exception(f"File format is not supported. Supported formats: {supported_formats}")
         
         if self.repair_input_df:
             self.__repair_input_df()
+
+        self.logger.info("Input DataFrame loaded successfully.")
 
     def reset_before_analysis(self, bruteforce = False):
         """
@@ -470,6 +552,8 @@ class cfg:
 
         for db in self.data_info:
             self.input_df[db["results_column"]] = np.nan
+
+        self.logger.info("Input DataFrame repaired.")
         
     def fill_Nans(self, database_index: int):
         """
@@ -509,7 +593,7 @@ class cfg:
 
         return full_identifier
     
-    def insert_match_to_input_df(self, data_df: pd.DataFrame, database_index: int, input_sequence_index: int, output_sequence_index: int, mp_input_df=None):
+    def insert_match_to_input_df(self, data_df: pd.DataFrame, database_index: int, input_sequence_index: int, output_sequence_index: int):
         """
         Insert a match from the output data into the input DataFrame.
 
@@ -518,24 +602,20 @@ class cfg:
             database_index (int): Index of the database being analyzed.
             input_sequence_index (int): Index of the sequence in the input DataFrame.
             output_sequence_index (int): Index of the sequence in the output data.
-            mp_input_df (Optional[mp_input_df]): A multiprocessing input DataFrame (if applicable).
 
         Note:
             This method is used to insert a matching result from the output data into the
             input DataFrame for further analysis and reporting.
         """
-        if mp_input_df is not None:
-            input_df = mp_input_df
-
-        else: input_df = self.input_df
-
-        filename, file_extension = os.path.splitext(self.data_info[database_index]["path"])
+        
+        input_df = self.input_df
         identifier_column_names = self.data_info[database_index]["identifier_of_seq"]
+
+        filename, _ = os.path.splitext(self.data_info[database_index]["path"])
         sseq = data_df[self.data_info[database_index]["sequence_column_name"]][output_sequence_index]
 
         if identifier_column_names is None:
             identifier = os.path.basename(filename)
-            s = "file_name"
 
         else: identifier = self.merge_all_identifiers(data_df=data_df, identifier_column_names=identifier_column_names,output_sequence_index=output_sequence_index)
 
@@ -597,27 +677,49 @@ class cfg:
 
     def load_database(self, database_index = None, engine=None) -> pd.DataFrame:
 
-        if database_index is None:
-            raise Exception("Database index needs to be specified")
+        if database_index is None: raise Exception("Database index needs to be specified")
+        if database_index >= len(self.data_info): raise Exception(f"Database index out of range. Max index: {len(self.data_info) - 1}")
         
         path = self.data_info[database_index]["path"]
         suffix = Path(path).suffix
         supported_formats = [".csv", ".tsv" ".xlsx", ".xls", ".RData", ".Rbin", ".RDATA"]
 
         columns = self.data_info[database_index]["identifier_of_seq"] + [self.data_info[database_index]["sequence_column_name"]]
-        print(f"Loading database: {os.path.basename(path)}, index: {database_index}")
+        self.logger.info(f"Loading database: {os.path.basename(path)}, index: {database_index}")
 
         if suffix == ".csv":
-            return pd.DataFrame(pd.read_csv(path, engine=engine, usecols=columns, dtype=str))
-        elif suffix in [".xlsx", ".xls"]:
-            return pd.DataFrame(pd.read_excel(path, engine=engine, usecols=columns, dtype=str))
-        elif suffix == ".tsv":
-            return pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine, usecols=columns, dtype=str))
-        elif suffix in [".RData", ".Rbin", ".RDATA"]:
-            data = pr.read_r(path, use_objects=columns)
-            return data[os.path.splitext(path)[0]]
-        
+            try:
+                db = pd.DataFrame(pd.read_csv(path, engine=engine, usecols=columns, dtype=str))
+            except Exception as e:
+                self.logger.error(f"Error loading csv file: {e}")
+                raise Exception(f"Error loading csv file: {e}")
 
+        elif suffix in [".xlsx", ".xls"]:
+            try:
+                db = pd.DataFrame(pd.read_excel(path, engine=engine, usecols=columns, dtype=str))
+            except Exception as e:
+                self.logger.error(f"Error loading Excel file: {e}")
+                raise Exception(f"Error loading Excel file: {e}")
+            
+        elif suffix == ".tsv":
+            try:
+                db = pd.DataFrame(pd.read_csv(path, sep="\t", engine=engine, usecols=columns, dtype=str))
+            except Exception as e:
+                self.logger.error(f"Error loading tsv file: {e}")
+                raise Exception(f"Error loading tsv file: {e}")
+            
+        elif suffix in [".RData", ".Rbin", ".RDATA"]:
+            try:
+                data = pr.read_r(path, use_objects=columns)
+                db = data[os.path.splitext(path)[0]]
+            except Exception as e:
+                self.logger.error(f"Error loading R file: {e}")
+                raise Exception(f"Error loading R file: {e}")
+        
         else:
             err = f"File format is not supported for database. Supported formats: {supported_formats}"
+            self.logger.error(err)
             raise Exception(err)
+        
+        self.logger.info(f"Database loaded successfully: {os.path.basename(path)}")
+        return db

@@ -1,5 +1,5 @@
 import pandas as pd
-from Database_comparator.config_class import cfg
+from config_class import cfg
 import multiprocessing as mp
 import numpy as np
 from tqdm import tqdm
@@ -20,12 +20,17 @@ class Aligner:
         self.data_df = None  # Placeholder for the loaded database DataFrame
         self.original_indices = self.config.input_df.index.values  # Store original indices to preserve mapping
 
+
+        self.config.logger.info("Aligner class initialized.")
+
     def aligner_search_in_single_database(self, database_index: int, parallel=False) -> None:
         """
         Perform Smith-Waterman algorithm-based match search in a single database.
 
         """
+        self.config.logger.info(f"Performing alignment search in database {database_index}.")
         if parallel:
+            self.config.logger.info("Switching to multiprocessing mode.")
             self.aligner_search_in_single_database_MULTIPROCESSING(database_index=database_index)
             return
 
@@ -44,11 +49,15 @@ class Aligner:
                 )
 
         self.config.fill_Nans(database_index)
+        self.config.logger.info(f"Alignment search in database {database_index} completed.")
+
 
     def aligner_search_in_all_databases(self, parallel=False) -> None:
         """
         Perform Smith-Waterman algorithm-based match search in all databases.
         """
+        self.config.reset_before_analysis()
+        self.config.logger.info("Performing alignment search in all databases.")
         for db_index in range(len(self.config.data_info)):
             self.aligner_search_in_single_database(database_index=db_index, parallel=parallel)
 
@@ -56,6 +65,8 @@ class Aligner:
         """
         Perform Smith-Waterman algorithm-based match search in a single database using multiprocessing.
         """
+
+        self.config.logger.info(f"Performing alignment search in database {database_index} using multiprocessing.")
         self.data_df = self.config.load_database(database_index=database_index, engine="python")
         data_sequences = np.array(self.data_df[self.config.data_info[database_index]["sequence_column_name"]], dtype=object)
 
@@ -68,6 +79,7 @@ class Aligner:
             for chunk, indices in input_chunks
         )
 
+        self.config.logger.info("Procesing output chunks...")
         for result in results:
             for i, j in result:
                 self.config.insert_match_to_input_df(
@@ -77,11 +89,14 @@ class Aligner:
                     output_sequence_index=j
                 )
 
+        self.config.logger.info(f"Alignment search in database {database_index} completed.")
+
     def aligner_search_in_all_databases_MULTIPROCESSING(self) -> None:
         """
         Perform Smith-Waterman algorithm-based match search in all databases using multiprocessing.
         """
         self.config.reset_before_analysis()
+        self.config.logger.info("Performing alignment search in all databases using multiprocessing.")
         for i in range(len(self.config.data_info)):
             self.aligner_search_in_single_database_MULTIPROCESSING(database_index=i)
 

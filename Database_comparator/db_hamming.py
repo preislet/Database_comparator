@@ -1,6 +1,6 @@
 import pandas as pd
 
-from Database_comparator.config_class import cfg
+from config_class import cfg
 from tqdm import tqdm
 import numpy as np
 
@@ -31,6 +31,9 @@ class hamming_distance:
         self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
         self.query_sequences = (self.config.input_df[self.config.input_file_info["sequence_column_name"]]).tolist()
 
+
+        self.config.logger.info("Hamming distance class initialized.")
+        self.config.logger.warning("Hamming distance class is deprecated and will be removed in future versions. Use the FastHammingDistance class instead. No logging will be provided for this class.")
     # ------------------------------------Hamming distance--------------------------------------------
     def analyze_all_hamming_matrices(self) -> pd.DataFrame:
         """
