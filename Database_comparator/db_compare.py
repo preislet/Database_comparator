@@ -6,10 +6,11 @@ import config_class as config_class
 import db_fast_hamming as db_fast
 
 import warnings
-from Bio import BiopythonDeprecationWarning
+from Bio import BiopythonDeprecationWarning, BiopythonWarning
 
 warnings.simplefilter(action='ignore', category=BiopythonDeprecationWarning)
 warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
 
 from typing import Literal
 

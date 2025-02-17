@@ -3,11 +3,13 @@ import pyreadr as pr
 import os
 import warnings
 from pathlib import Path
-import multiprocessing as mp
 import numpy as np
-from Bio import Align
+from Bio import Align, BiopythonWarning
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
+
+
 
 # TODO updatovat README o nové parametry v config file (swa_mode, matice)
 
@@ -68,12 +70,7 @@ class cfg:
 
         # Multiprocessing
         self.number_of_processors = 1
-        self.ns = None
-        try:
-            self.ns = mp.Manager().Namespace()
-        except:
-            raise Exception("Multiprocessing is not supported on this system. Exception was raised do to >>>mp.Manager().Namespace()<<<. Comparator must be used under if __name__ == '__main__':")
-        
+
         # dataframe of input file
         self.repair_input_df = True
         self.input_df = None
@@ -112,7 +109,6 @@ class cfg:
         print(f"Max hamming distance: {self.max_hamming_distance}")
         print("-"*200)
         print(f"Number of processors: {self.number_of_processors}")
-        print(f"Namespace: {self.ns}")
         print("-"*200)
         print(f"Separator of results in input df: {self.separator_of_results_in_input_df}")
         print(f"Input df: {self.input_df}")

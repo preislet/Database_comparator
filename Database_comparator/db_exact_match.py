@@ -5,6 +5,9 @@ import multiprocessing as mp
 from tqdm import tqdm
 from joblib import Parallel, delayed  # Efficient parallel processing
 
+import warnings
+warnings.simplefilter("ignore")
+
 class ExactMatch:
     """
     The exact_match class provides methods for performing exact match searches in databases.

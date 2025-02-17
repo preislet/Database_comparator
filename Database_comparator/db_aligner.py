@@ -5,6 +5,16 @@ import numpy as np
 from tqdm import tqdm
 from joblib import Parallel, delayed  # Efficient parallel processing
 
+
+import warnings
+warnings.simplefilter("ignore")
+
+
+from Bio import BiopythonWarning
+warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
+
+
+
 class Aligner:
     """
     The Aligner class provides methods for performing sequence alignments using the Smith-Waterman algorithm.
@@ -22,6 +32,7 @@ class Aligner:
     def aligner_search_in_single_database(self, database_index: int, parallel=False) -> None:
         """
         Perform Smith-Waterman algorithm-based match search in a single database.
+
         """
         if parallel:
             self.aligner_search_in_single_database_MULTIPROCESSING(database_index=database_index)

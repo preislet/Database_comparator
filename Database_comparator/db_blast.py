@@ -8,6 +8,14 @@ from Bio.Blast.Applications import NcbimakeblastdbCommandline
 import Database_comparator.Fasta_maker as Fasta_maker
 import Database_comparator.db_aligner as db_aligner
 
+
+import warnings
+warnings.simplefilter("ignore")
+
+from Bio import BiopythonWarning
+warnings.filterwarnings("ignore", category=BiopythonWarning, module="Bio")
+
+
 FastaSeparator = "!"
 
 

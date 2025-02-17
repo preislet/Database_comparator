@@ -6,6 +6,9 @@ import numpy as np
 from joblib import Parallel, delayed  # Efficient parallel processing
 
 
+import warnings
+warnings.simplefilter("ignore")
+
 class FastHammingDistance:
     """
     Class for efficiently computing Hamming distances between query sequences and database sequences.

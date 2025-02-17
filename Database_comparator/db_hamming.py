@@ -4,7 +4,7 @@ from Database_comparator.config_class import cfg
 from tqdm import tqdm
 import numpy as np
 
-import warnings
+
 
 
 class hamming_distance:
