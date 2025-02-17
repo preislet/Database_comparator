@@ -4,13 +4,11 @@ import os
 import warnings
 from pathlib import Path
 import numpy as np
+
+
 from Bio import Align
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
-
-
-
-# TODO updatovat README o nové parametry v config file (swa_mode, matice)
 
 StopCodon = "#"
 class cfg:
