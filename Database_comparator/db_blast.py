@@ -5,8 +5,8 @@ import os
 
 import subprocess
 
-import Database_comparator.Fasta_maker as Fasta_maker
-import Database_comparator.db_aligner as db_aligner
+import Fasta_maker as Fasta_maker
+import db_aligner as db_aligner
 
 
 FastaSeparator = "!"
@@ -21,7 +21,7 @@ class Blast:
     search results, including inserting matching results into the input DataFrame based on the provided
     configuration.
     """
-    def __init__(self, config: cfg, aligner: db_aligner.aligner) -> None:
+    def __init__(self, config: cfg, aligner: db_aligner.Aligner) -> None:
         self.config = config
         self.aligner = aligner
         self.config.logger.info("Blast class initialized.")
