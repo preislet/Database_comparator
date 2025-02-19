@@ -37,7 +37,6 @@ class cfg:
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-        # Create file handler and console handler
         log_file = "DB_comparator_run.log"
         file_handler = logging.FileHandler(log_file, mode='w')
         file_handler.setLevel(logging.DEBUG)
@@ -168,7 +167,6 @@ class cfg:
             output.extend(items)
 
         return "\n".join(output)
-
 
     def __load_config_txt(self, config_file):
         """
@@ -448,7 +446,6 @@ class cfg:
         if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
 
         self.logger.info("Configuration from xlsx file loaded successfully.")
-
 
     def __load_input_df(self):
         """

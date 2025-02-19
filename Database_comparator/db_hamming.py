@@ -1,7 +1,6 @@
 import pandas as pd
 
-from config_class import cfg
-from tqdm import tqdm
+from Database_comparator.config_class import cfg
 import numpy as np
 
 
@@ -121,7 +120,7 @@ class hamming_distance:
             This method computes Hamming distances for all databases and can optionally analyze the results.
         """
         self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
-        for i in tqdm(range(len(self.config.data_info)), desc="Finding hamming distances for all databases"):
+        for i in range(len(self.config.data_info)):
             self.find_hamming_distances_for_single_database(i, analyze=analyze)
         if analyze:
             return self.config.input_df.copy(deep=True)

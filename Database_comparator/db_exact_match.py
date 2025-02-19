@@ -1,8 +1,7 @@
-from config_class import cfg
+from Database_comparator.config_class import cfg
 import pandas as pd
 import numpy as np
 import multiprocessing as mp
-from tqdm import tqdm
 from joblib import Parallel, delayed  # Efficient parallel processing
 
 class ExactMatch:
@@ -58,8 +57,8 @@ class ExactMatch:
         data_sequences = np.array(self.data_df[self.config.data_info[database_index]["sequence_column_name"]], dtype=object)
 
 
-        for i in tqdm(enumerate(self.query_sequences), desc=f"Database {database_index} Exact Match"):
-            matches = np.where(data_sequences == self.query_sequences[i])[0]
+        for i, query_seq in enumerate(self.query_sequences):
+            matches = np.where(data_sequences == query_seq)[0]
             for j in matches:
                 self.config.insert_match_to_input_df(
                     data_df=self.data_df,

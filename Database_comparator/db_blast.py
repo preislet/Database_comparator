@@ -1,12 +1,10 @@
 import pandas as pd
-from tqdm import tqdm
-from config_class import cfg
+from Database_comparator.config_class import cfg
 import os
 
 import subprocess
 
-import Fasta_maker as Fasta_maker
-import db_aligner as db_aligner
+import Database_comparator.Fasta_maker as Fasta_maker
 
 
 FastaSeparator = "!"
@@ -21,9 +19,8 @@ class Blast:
     search results, including inserting matching results into the input DataFrame based on the provided
     configuration.
     """
-    def __init__(self, config: cfg, aligner: db_aligner.Aligner) -> None:
+    def __init__(self, config: cfg) -> None:
         self.config = config
-        self.aligner = aligner
         self.config.logger.info("Blast class initialized.")
 
 
@@ -77,7 +74,7 @@ class Blast:
 
         command = [
         "makeblastdb", "-dbtype", "prot", "-in", fasta_file_name,
-        "-title", name, "-max_file_sz", "10GB", "-out", self.config.blast_database_full_name]
+        "-title", name, "-max_file_sz", "4GB", "-out", self.config.blast_database_full_name]
     
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode != 0:
@@ -153,9 +150,7 @@ class Blast:
         columns_names = self.config.blast_outfmt.split()
         data_df = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:]).drop_duplicates()
 
-        for i in tqdm(range(len(data_df)), desc="Analyzing BLAST output data with aligner", colour="green"):
-            if self.aligner.align_sequences(data_df["qseq"][i], data_df["sseq"][i]):
-                self.__insert_blast_results_to_input_df(data_df, i)
+        for i in range(len(data_df)): self.__insert_blast_results_to_input_df(data_df, i)
 
         self.config.logger.info("BLAST output data analyzed and inserted into the input DataFrame.")
         

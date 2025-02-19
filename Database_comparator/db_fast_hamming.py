@@ -1,7 +1,6 @@
 import pandas as pd
-from config_class import cfg
+from Database_comparator.config_class import cfg
 import multiprocessing as mp
-from tqdm import tqdm
 import numpy as np
 from joblib import Parallel, delayed  # Efficient parallel processing
 
@@ -70,7 +69,7 @@ class FastHammingDistance:
         # Load database only once to reduce file access overhead
         self.data_df = self.config.load_database(database_index=database_index, engine="python")
 
-        for i in tqdm(range(len(self.query_sequences)), desc="Database " + str(database_index) + " Hamming distance"):
+        for i in range(len(self.query_sequences)):
             for j in range(len(self.data_df)):
                 distance = self.__find_hamming_distance(query_seq=self.query_sequences[i], 
                                                         data_seq=self.data_df[self.config.data_info[database_index]["sequence_column_name"]].iloc[j])

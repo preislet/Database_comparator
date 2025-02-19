@@ -1,5 +1,4 @@
 import pandas as pd
-from tqdm import tqdm
 
 class Fasta_maker:
     """
@@ -69,11 +68,10 @@ class Fasta_maker:
         for i in range(len(self.data_dfs)):
             self.data_dfs[i].drop_duplicates(inplace=True)
             data_sequences = self.data_dfs[i][self.sequence_column_name[i]]
-            for j in tqdm(range(len(data_sequences)), desc=f"Conversion progress of database with index: {i}"):
+            for j in range(len(data_sequences)):
                 identifier = self.result_columns[i] + self.separator + self.__merge_all_identifiers(i, j)
                 output_fasta_file.write(f'>{identifier}\n{data_sequences[j]}\n')
         output_fasta_file.close()
-        print(f"Fasta file {self.output_file_name} created")
 
     def make_query(self):
         """
@@ -87,5 +85,3 @@ class Fasta_maker:
 
         with open(self.output_file_name, 'w') as f:
             f.write('\n'.join(fasta_data))
-
-        print("QUERY file has been created.")

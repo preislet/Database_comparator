@@ -1,9 +1,9 @@
-import db_exact_match as db_exact_match
-import db_aligner as db_aligner
-import db_blast as db_blast
-import db_hamming as db_hamming
-import config_class as config_class
-import db_fast_hamming as db_fast
+import Database_comparator.db_exact_match as db_exact_match
+import Database_comparator.db_aligner as db_aligner
+import Database_comparator.db_blast as db_blast
+import Database_comparator.db_hamming as db_hamming
+import Database_comparator.config_class as config_class
+import Database_comparator.db_fast_hamming as db_fast
 
 import warnings
 
@@ -35,7 +35,7 @@ class DB_comparator:
         self.config = config_class.cfg(config_file, show_log_in_console=show_log_in_console)
         self.exact_match = db_exact_match.ExactMatch(self.config)  # ✅ 
         self.aligner = db_aligner.Aligner(self.config)   # ✅ 
-        self.blast = db_blast.Blast(self.config, self.aligner)  # ✅ 
+        self.blast = db_blast.Blast(self.config)  # ✅ 
         self.hamming_distances = db_hamming.hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead
         self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # ✅ 
         # Place for new modules...

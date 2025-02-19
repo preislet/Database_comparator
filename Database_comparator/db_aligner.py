@@ -1,8 +1,7 @@
 import pandas as pd
-from config_class import cfg
+from Database_comparator.config_class import cfg
 import multiprocessing as mp
 import numpy as np
-from tqdm import tqdm
 from joblib import Parallel, delayed  # Efficient parallel processing
 
 
@@ -118,7 +117,10 @@ class Aligner:
         """
         Align two sequences and determine whether they match.
         """
-        score: float = self.config.aligner.score(seqA, seqB)
+        try: score: float = self.config.aligner.score(seqA, seqB)
+        except:
+            self.config.logger.error(f"Error aligning sequences {seqA} and {seqB}.")
+            raise ValueError("Error aligning sequences.")
         max_score: float = (
             max(self.config.aligner.score(seqA, seqA), self.config.aligner.score(seqB, seqB))
             if self.config.aligner.substitution_matrix is not None
