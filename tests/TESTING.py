@@ -13,6 +13,25 @@ sys.path.append(project_root)
 # Now you can import db_compare
 import Database_comparator.db_compare as db_compare
 
+def clean_up_blast_files():
+        # Cleanup temporary files
+    if os.path.exists("Fasta_files"):
+        for file in os.listdir("Fasta_files"):
+            os.remove(os.path.join("Fasta_files", file))
+        os.rmdir("Fasta_files")
+
+    if os.path.exists("Query_files"):
+        for file in os.listdir("Query_files"):
+            os.remove(os.path.join("Query_files", file))
+        os.rmdir("Query_files")
+
+    if os.path.exists("BLAST_database"):
+        for file in os.listdir("BLAST_database"):
+            os.remove(os.path.join("BLAST_database", file))
+        os.rmdir("BLAST_database")
+
+    if os.path.exists("blastp_output.txt"):os.remove("blastp_output.txt")
+
 def test_initialization():
     """Tests if the DB_comparator class initializes correctly and measures initialization time."""
     config_file = r"TEST_config_file.xlsx"
@@ -82,48 +101,37 @@ def run_test(test_function, true_file_path, output_file_name):
         comparison_status = "✅ Match" if true_file.equals(test_file) else "❌ Mismatch"
 
         os.remove(output_file_name)
+        clean_up_blast_files()
 
         return search_status, comparison_status, elapsed_time
 
     except Exception as e:
-        return "❌ Failed", "N/A", "N/A"
+        if os.path.exists(output_file_name): os.remove(output_file_name)
+        clean_up_blast_files()
+        return "❌ Failed", "❌ Not compared", "N/A"
 
-def exact_match_TEST(db_comparator):
+def exact_match_TEST(db_comparator: db_compare.DB_comparator):
     """Performs an exact match test."""
     db_comparator.exact_match.exact_match_search_in_all_databases(parallel=False)
     db_comparator.export_data_frame("exact_match_TEST_testing.xlsx")
 
-def hamming_distances_TEST(db_comparator):
+def hamming_distances_TEST(db_comparator: db_compare.DB_comparator):
     """Performs a hamming distances test."""
     db_comparator.fast_hamming_distances.find_hamming_distances_for_all_databases(parallel=False)
     db_comparator.export_data_frame("hamming_distances_TEST_testing.xlsx")
 
-def aligner_TEST(db_comparator):
+def aligner_TEST(db_comparator: db_compare.DB_comparator):
     """Performs an aligner test."""
     db_comparator.aligner.aligner_search_in_all_databases(parallel=False)
     db_comparator.export_data_frame("aligner_TEST_testing.xlsx")
 
-def blast_TEST(db_comparator):
+def blast_TEST(db_comparator: db_compare.DB_comparator):
     """Performs a BLAST test."""
     db_comparator.blast.blast_make_database()
     db_comparator.blast.blast_search_and_analyze_matches_in_database()
     db_comparator.export_data_frame("blast_TEST_testing.xlsx")
 
-    # Cleanup temporary files
-    if os.path.exists("Fasta_files"):
-        for file in os.listdir("Fasta_files"):
-            os.remove(os.path.join("Fasta_files", file))
-    if os.path.exists("Query_files"):
-        for file in os.listdir("Query_files"):
-            os.remove(os.path.join("Query_files", file))
-    if os.path.exists("BLAST_database"):
-        for file in os.listdir("BLAST_database"):
-            os.remove(os.path.join("BLAST_database", file))
-    
-    os.rmdir("Fasta_files")
-    os.rmdir("Query_files")
-    os.rmdir("BLAST_database")
-    os.remove("blastp_output.txt")
+    clean_up_blast_files()
 
 def generate_table_of_results():
     """Generates a table of test results, including search success, file comparison, and execution time."""
