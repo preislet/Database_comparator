@@ -8,6 +8,8 @@ import numpy as np
 import logging
 from Bio import Align
 
+from typing import Literal
+
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 StopCodon = "#"
@@ -22,7 +24,7 @@ class cfg:
         This constructor initializes various parameters and loads settings from the
         specified configuration file to customize the behavior of the program.
     """
-    def __init__(self, config_file=None, show_log_in_console:bool = False) -> None:
+    def __init__(self, config_file=None, show_log_in_console:bool = False, log_write_append: Literal["w", "a"] = "w") -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -38,7 +40,7 @@ class cfg:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
         log_file = "DB_comparator_run.log"
-        file_handler = logging.FileHandler(log_file, mode='w')
+        file_handler = logging.FileHandler(log_file, mode=log_write_append)
         file_handler.setLevel(logging.DEBUG)
 
         console_handler = logging.StreamHandler()

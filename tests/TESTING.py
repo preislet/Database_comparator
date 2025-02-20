@@ -7,6 +7,7 @@ import time
 
 # Get the absolute path of the project root directory
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# open folder Database_comparator
 sys.path.append(project_root)
 
 # Now you can import db_compare
@@ -40,7 +41,7 @@ def test_exporting():
     config_file = r"TEST_config_file.xlsx"
     possible_formats = ['xlsx', 'csv', 'tsv', 'md']
     try:
-        db_comparator = db_compare.DB_comparator(config_file)
+        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_write_append="a")
 
         start_time = time.time()
         for data_format in possible_formats:
@@ -65,7 +66,7 @@ def run_test(test_function, true_file_path, output_file_name):
     config_file = r"TEST_config_file.xlsx"
 
     try:
-        db_comparator = db_compare.DB_comparator(config_file)
+        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_write_append="a")
 
         # Measure search execution time
         start_time = time.time()

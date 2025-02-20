@@ -1,9 +1,9 @@
-import Database_comparator.db_exact_match as db_exact_match
-import Database_comparator.db_aligner as db_aligner
-import Database_comparator.db_blast as db_blast
-import Database_comparator.db_hamming as db_hamming
-import Database_comparator.config_class as config_class
-import Database_comparator.db_fast_hamming as db_fast
+from .db_exact_match import ExactMatch
+from .db_aligner import Aligner
+from .db_blast import Blast
+from .config_class import cfg
+from .db_fast_hamming import FastHammingDistance
+from .db_hamming import hamming_distance
 
 import warnings
 
@@ -20,7 +20,7 @@ class DB_comparator:
     and calculates Hamming distances between sequences. The class allows for exporting the results to
     different file formats, such as Excel, CSV, and Markdown.
     """
-    def __init__(self, config_file, show_log_in_console: bool = False) -> None:
+    def __init__(self, config_file, show_log_in_console: bool = False, log_write_append: Literal["w", "a"] = "w") -> None:
         """
         Initialize the DB_comparator class to compare databases based on the provided configuration.
 
@@ -32,12 +32,12 @@ class DB_comparator:
             and BLAST-based comparisons.
         """
 
-        self.config = config_class.cfg(config_file, show_log_in_console=show_log_in_console)
-        self.exact_match = db_exact_match.ExactMatch(self.config)  # ✅ 
-        self.aligner = db_aligner.Aligner(self.config)   # ✅ 
-        self.blast = db_blast.Blast(self.config)  # ✅ 
-        self.hamming_distances = db_hamming.hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead
-        self.fast_hamming_distances = db_fast.FastHammingDistance(self.config)  # ✅ 
+        self.config = cfg(config_file, show_log_in_console=show_log_in_console, log_write_append = log_write_append) # ✅
+        self.exact_match = ExactMatch(self.config)  # ✅ 
+        self.aligner = Aligner(self.config)   # ✅ 
+        self.blast = Blast(self.config)  # ✅ 
+        self.hamming_distances = hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead (✅)
+        self.fast_hamming_distances = FastHammingDistance(self.config)  # ✅ 
         # Place for new modules...
         # self.new_module = new_module.NewModule(self.config)
         # TODO: Add fuzzy matching module (e.g., Levenshtein distance)

@@ -1,5 +1,5 @@
 import pandas as pd
-from Database_comparator.config_class import cfg
+from .config_class import cfg
 import os
 
 import subprocess
@@ -75,8 +75,17 @@ class Blast:
         command = [
         "makeblastdb", "-dbtype", "prot", "-in", fasta_file_name,
         "-title", name, "-max_file_sz", "4GB", "-out", self.config.blast_database_full_name]
-    
-        result = subprocess.run(command, capture_output=True, text=True)
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True)
+
+        except FileNotFoundError:
+            self.config.logger.error("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+            raise FileNotFoundError("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+        except Exception as e:
+            self.config.logger.error(f"BLAST database creation failed: {e}")
+            raise RuntimeError(f"BLAST database creation failed: {e}")
+        
         if result.returncode != 0:
             self.config.logger.error(f"BLAST database creation failed: {result.stderr}")
             raise RuntimeError(f"BLAST database creation failed: {result.stderr}")
@@ -112,8 +121,17 @@ class Blast:
         "blastp", "-query", query, "-db", self.config.blast_database_full_name,
         "-evalue", str(self.config.e_value), "-outfmt", self.config.blast_outfmt,
         "-out", self.config.blast_output_name]
-    
-        result = subprocess.run(command, capture_output=True, text=True)
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True)
+
+        except FileNotFoundError:
+            self.config.logger.error("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+            raise FileNotFoundError("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+        except Exception as e:
+            self.config.logger.error(f"BLAST search failed: {e}")
+            raise RuntimeError(f"BLAST search failed: {e}")
+        
         if result.returncode != 0:
             self.config.logger.error(f"BLAST search failed: {result.stderr}")
             raise RuntimeError(f"BLAST search failed: {result.stderr}")

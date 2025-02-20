@@ -1,5 +1,5 @@
 import pandas as pd
-from Database_comparator.config_class import cfg
+from .config_class import cfg
 import multiprocessing as mp
 import numpy as np
 from joblib import Parallel, delayed  # Efficient parallel processing
