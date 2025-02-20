@@ -46,6 +46,9 @@ class DB_comparator:
             
     def __str__(self) -> str:
         return str(self.config)
+    
+    def __del__(self):
+        self.config.logger.info("DB_comparator class was successfully deleted.".upper())
 
     def export_data_frame(self, output_file: str="Results_DefaultDbCompareOutputName.xlsx", data_format: Literal["xlsx", "csv", "tsv", "md"] = "xlsx",  control_cell_size: bool = True):
         """

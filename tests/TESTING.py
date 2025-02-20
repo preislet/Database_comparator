@@ -148,7 +148,6 @@ def generate_table_of_results():
     table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".4f")
     print(table)
 
-
 def main():
     generate_table_of_results()
 

@@ -78,12 +78,11 @@ class Blast:
 
         try:
             result = subprocess.run(command, capture_output=True, text=True)
-
         except FileNotFoundError:
-            self.config.logger.error("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+            self.config.logger.critical("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
             raise FileNotFoundError("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
         except Exception as e:
-            self.config.logger.error(f"BLAST database creation failed: {e}")
+            self.config.logger.critical(f"BLAST database creation failed: {e}")
             raise RuntimeError(f"BLAST database creation failed: {e}")
         
         if result.returncode != 0:
@@ -124,12 +123,11 @@ class Blast:
 
         try:
             result = subprocess.run(command, capture_output=True, text=True)
-
         except FileNotFoundError:
-            self.config.logger.error("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
+            self.config.logger.critical("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
             raise FileNotFoundError("BLAST+ tools are not installed. Please install BLAST+ tools to use this feature.")
         except Exception as e:
-            self.config.logger.error(f"BLAST search failed: {e}")
+            self.config.logger.critical(f"BLAST search failed: {e}")
             raise RuntimeError(f"BLAST search failed: {e}")
         
         if result.returncode != 0:
