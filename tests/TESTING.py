@@ -145,7 +145,7 @@ def generate_table_of_results():
         ["BLAST Test", *run_test(blast_TEST, "True_files/blast_TEST_true.xlsx", "blast_TEST_testing.xlsx")]
     ]
 
-    table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".4f")
+    table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".2f")
     print(table)
 
 def main():
