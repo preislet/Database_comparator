@@ -1,9 +1,9 @@
-from .db_exact_match import ExactMatch
-from .db_aligner import Aligner
-from .db_blast import Blast
-from .config_class import cfg
-from .db_fast_hamming import FastHammingDistance
-from .db_hamming import hamming_distance
+from Database_comparator.db_exact_match import ExactMatch
+from Database_comparator.db_aligner import Aligner
+from Database_comparator.db_blast import Blast
+from Database_comparator.config_class import cfg
+from Database_comparator.db_fast_hamming import FastHammingDistance
+from Database_comparator.db_hamming import hamming_distance
 
 import warnings
 
