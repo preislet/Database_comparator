@@ -1,35 +1,30 @@
-FROM rocker/rstudio:latest
+FROM jupyter/datascience-notebook:python-3.11
 
-ARG path="/home/rstudio"
-WORKDIR ${path}
+# Set working directory inside container
+WORKDIR /home/database_comparator
 
-RUN mkdir database_comparator
-RUN chown -R rstudio /home/rstudio/database_comparator
+# Copy project folders into the container
+COPY notebooks/ notebooks/
+COPY tests/ tests/
 
-COPY DEFAULT_config_file.txt database_comparator/
-#ncbi-blast
-RUN apt-get update && apt-get -y install ncbi-blast+
-#R
-RUN install2.r --error \
-    reticulate \
-    png \
-    jsonlite
+# System dependencies (e.g. BLAST for your library)
+USER root
+RUN apt-get update && apt-get install -y ncbi-blast+ && apt-get clean
 
+# Make target folders writable by notebook user
+RUN chmod -R a+w /home/database_comparator/notebooks \
+    && chmod -R a+w /home/database_comparator/tests
 
-# Python3
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3 \
-    python3-pip \
-    python3-dev \
-    python3-venv \
-    && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Revert to Jupyter's non-root user
+USER $NB_UID
 
+# Install your Python package from PyPI
+RUN pip install --no-cache-dir database_comparator openpyxl
 
-# Install Python packages using reticulate
-RUN pip install database_comparator
+# Install spreadsheet editor for CSV/TSV
+RUN pip install jupyterlab-spreadsheet-editor
+RUN pip install jupyterlab-spreadsheet
 
 
-WORKDIR /home/rstudio/database_comparator
-EXPOSE 8787
+# Start JupyterLab with no token for convenience
+CMD ["start.sh", "jupyter", "lab", "--NotebookApp.token=''", "--NotebookApp.password=''"]

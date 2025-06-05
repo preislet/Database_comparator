@@ -150,7 +150,7 @@ class Blast:
         self.blast_search_for_match_in_database(query)
         self.blast_analyze_output_data()
 
-        return self.config.input_df.copy(deep=True)
+        return self.config.input_df
 
     def blast_analyze_output_data(self) -> None:
         """
@@ -161,7 +161,7 @@ class Blast:
             into the input DataFrame using the specified aligner and configuration settings.
         """
 
-        self.config.logger.info("Analyzing BLAST output data with aligner.")
+        self.config.logger.info("Analyzing BLAST output data.")
         self.config.reset_before_analysis()
         columns_names = self.config.blast_outfmt.split()
         data_df = pd.read_csv(self.config.blast_output_name, sep="\t", names=columns_names[1:]).drop_duplicates()
