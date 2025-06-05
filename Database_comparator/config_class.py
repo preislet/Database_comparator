@@ -24,7 +24,7 @@ class cfg:
         This constructor initializes various parameters and loads settings from the
         specified configuration file to customize the behavior of the program.
     """
-    def __init__(self, config_file=None, show_log_in_console:bool = False, log_write_append: Literal["w", "a"] = "w") -> None:
+    def __init__(self, config_file=None, show_log_in_console:bool = False, log_write_append: Literal["w", "a"] = "w", log_tag:str = "") -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -39,10 +39,17 @@ class cfg:
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
+
+        log_dir = "Logs"
+        os.makedirs(log_dir, exist_ok=True)
+
         time = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
-        log_file = "DB_comparator_run_" + time + ".log"
+        log_file = os.path.join(log_dir, f"DB_comparator_run_{time}_{log_tag}.log")
+
         file_handler = logging.FileHandler(log_file, mode=log_write_append)
         file_handler.setLevel(logging.DEBUG)
+
+    
 
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
