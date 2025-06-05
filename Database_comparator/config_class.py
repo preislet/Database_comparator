@@ -39,7 +39,8 @@ class cfg:
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
-        log_file = "DB_comparator_run.log"
+        time = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_file = "DB_comparator_run_" + time + ".log"
         file_handler = logging.FileHandler(log_file, mode=log_write_append)
         file_handler.setLevel(logging.DEBUG)
 
