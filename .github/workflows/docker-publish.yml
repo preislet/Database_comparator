@@ -7,11 +7,13 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: write # This is crucial for writing to GHCR
 
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    # This job will only run if the commit message contains '[deploy]'
+    if: contains(github.event.head_commit.message, '[deploy]')
 
     steps:
       - name: Checkout repository
@@ -25,11 +27,17 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GITHUB_TOKEN }} # Uses the automatically generated token
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
+          # The tags should follow the pattern: ghcr.io/OWNER/REPOSITORY_NAME:TAG
+          # Ensure 'preislet' matches the GitHub user or organization that owns this repository
           tags: ghcr.io/preislet/database_comparator:latest
+          # You can also add other tags, e.g., using the Git commit SHA
+          # tags: |
+          #   ghcr.io/preislet/database_comparator:latest
+          #   ghcr.io/preislet/database_comparator:${{ github.sha }}
