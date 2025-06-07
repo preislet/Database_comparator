@@ -1,3 +1,4 @@
+<!--- jupyterlab:open-with:Markdown Preview --->
 # Database comparator
 
 [![PyPI version](https://badge.fury.io/py/Database-comparator.svg)](https://badge.fury.io/py/Database-comparator)

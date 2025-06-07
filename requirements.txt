@@ -1,8 +1,8 @@
 setuptools
-pandas~=2.1.1
+pandas
 bio
-numpy~=1.26.0
-pyreadr~=0.4.9
+numpy
+pyreadr
 tabulate
 openpyxl
 joblib
