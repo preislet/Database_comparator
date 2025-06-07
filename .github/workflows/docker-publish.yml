@@ -12,8 +12,9 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    # This job will only run if the commit message contains '[deploy]'
-    if: contains(github.event.head_commit.message, '[deploy]')
+    # This job will now run if the commit message contains '[deploy]',
+    # regardless of capitalization (e.g., '[Deploy]', '[DEPLOY]').
+    if: contains(lower(github.event.head_commit.message), '[deploy]')
 
     steps:
       - name: Checkout repository
