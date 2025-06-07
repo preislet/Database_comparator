@@ -36,7 +36,6 @@ class cfg:
             This constructor initializes various parameters and loads settings from the
             specified configuration file to customize the behavior of the program.
         """
-        # Logging
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
