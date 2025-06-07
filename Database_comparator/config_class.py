@@ -286,13 +286,13 @@ class cfg:
                     raise Exception(f"line: {line}... Number of processors must be integer")
 
             elif line[0].upper() == "SWA_matrix".upper():
-                if not line[1] in Align.substitution_matrices.load():
+                if line[1] not in Align.substitution_matrices.load():
                     err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
                     self.logger.error(err)
                     raise Exception(err) 
                 self.aligner.substitution_matrix = Align.substitution_matrices.load(line[1])
             elif line[0].upper() == "SWA_mode".upper():
-                if not line[1].lower in ["local", "global"]:
+                if line[1].lower() not in ['local', 'global']:
                     err = "Mode not found. Please use only global/local"
                     self.logger.error(err)
                     raise Exception(err)

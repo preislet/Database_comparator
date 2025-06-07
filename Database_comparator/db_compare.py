@@ -4,6 +4,7 @@ from Database_comparator.db_blast import Blast
 from Database_comparator.config_class import cfg
 from Database_comparator.db_fast_hamming import FastHammingDistance
 from Database_comparator.db_hamming import hamming_distance
+from Database_comparator.db_testing import TestDatabaseComparator
 
 import warnings
 
@@ -20,7 +21,7 @@ class DB_comparator:
     and calculates Hamming distances between sequences. The class allows for exporting the results to
     different file formats, such as Excel, CSV, and Markdown.
     """
-    def __init__(self, config_file, show_log_in_console: bool = False, log_write_append: Literal["w", "a"] = "w", log_tag:str="") -> None:
+    def __init__(self, config_file:str = "", show_log_in_console: bool = False, log_write_append: Literal["w", "a"] = "w", log_tag:str="") -> None:
         """
         Initialize the DB_comparator class to compare databases based on the provided configuration.
 
@@ -32,17 +33,22 @@ class DB_comparator:
             and BLAST-based comparisons.
         """
 
-        self.config = cfg(config_file, show_log_in_console=show_log_in_console, log_write_append = log_write_append, log_tag=log_tag) # ✅
-        self.exact_match = ExactMatch(self.config)  # ✅ 
-        self.aligner = Aligner(self.config)   # ✅ 
-        self.blast = Blast(self.config)  # ✅ 
-        self.hamming_distances = hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead (✅)
-        self.fast_hamming_distances = FastHammingDistance(self.config)  # ✅ 
+        self.test = TestDatabaseComparator()
+        if config_file == "":
+            print("The config_file parameter must be a string representing the path to the configuration file.")
+            print("Skipping initialization of DB_comparator. Only testing will be usable.")
+        else:
+            self.config = cfg(config_file, show_log_in_console=show_log_in_console, log_write_append = log_write_append, log_tag=log_tag) # ✅
+            self.exact_match = ExactMatch(self.config)  # ✅ 
+            self.aligner = Aligner(self.config)   # ✅ 
+            self.blast = Blast(self.config)  # ✅ 
+            self.hamming_distances = hamming_distance(self.config)  # Deprecated - use fast_hamming_distances instead (✅)
+            self.fast_hamming_distances = FastHammingDistance(self.config)  # ✅ 
         # Place for new modules...
         # self.new_module = new_module.NewModule(self.config)
         # TODO: Add fuzzy matching module (e.g., Levenshtein distance)
 
-        self.config.logger.info("All components were successfully initialized.".upper())
+            self.config.logger.info("All components were successfully initialized.".upper())
             
     def __str__(self) -> str:
         return str(self.config)

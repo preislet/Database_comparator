@@ -5,16 +5,14 @@ import numpy as np
 from tabulate import tabulate
 import time
 
-# Get the absolute path of the project root directory
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# open folder Database_comparator
-sys.path.append(project_root)
-
 # Now you can import db_compare
 import Database_comparator.db_compare as db_compare
 
+
+
+
 def clean_up_blast_files():
-        # Cleanup temporary files
+        # Cleanup temporary filesP
     if os.path.exists("Fasta_files"):
         for file in os.listdir("Fasta_files"):
             os.remove(os.path.join("Fasta_files", file))
@@ -34,7 +32,7 @@ def clean_up_blast_files():
 
 def test_initialization():
     """Tests if the DB_comparator class initializes correctly and measures initialization time."""
-    config_file = r"TEST_config_file.xlsx"
+    config_file = r"TMP_testing_folder/test_config_file.txt"
 
     try:
         start_time = time.time()
@@ -53,11 +51,12 @@ def test_initialization():
         return "✅ Success" if passed else "❌ Failed", "N/A", elapsed_time
 
     except Exception as e:
+        print(f"Initialization test failed with error: {e}")
         return "❌ Failed", "N/A", "N/A"
 
 def test_exporting():
     """Tests if the DB_comparator class exports data frames correctly."""
-    config_file = r"TEST_config_file.xlsx"
+    config_file = r"TMP_testing_folder/test_config_file.txt"
     possible_formats = ['xlsx', 'csv', 'tsv', 'md']
     try:
         db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag="exporting_test")
@@ -82,7 +81,7 @@ def test_exporting():
 
 def run_test(test_function, true_file_path, output_file_name):
     """Runs a test function, checks search success, file comparison, and measures execution time."""
-    config_file = r"TEST_config_file.xlsx"
+    config_file = r"TMP_testing_folder/test_config_file.txt"
 
     try:
         db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag=test_function.__name__)
@@ -98,7 +97,17 @@ def run_test(test_function, true_file_path, output_file_name):
         # Compare generated test file with true file
         true_file = pd.read_excel(true_file_path)
         test_file = pd.read_excel(output_file_name)
+
+        # rename all colum to "test"
+        true_file.columns = ["test"] * len(true_file.columns)
+        test_file.columns = ["test"] * len(test_file.columns)
         comparison_status = "✅ Match" if true_file.equals(test_file) else "❌ Mismatch"
+
+        if comparison_status == "❌ Mismatch":
+            # If mismatch, print the rows that differ
+            diff = pd.concat([true_file, test_file]).drop_duplicates(keep=False)
+            print("Differences found:")
+            print(diff)
 
         os.remove(output_file_name)
         clean_up_blast_files()
@@ -113,23 +122,23 @@ def run_test(test_function, true_file_path, output_file_name):
 def exact_match_TEST(db_comparator: db_compare.DB_comparator):
     """Performs an exact match test."""
     db_comparator.exact_match.exact_match_search_in_all_databases(parallel=False)
-    db_comparator.export_data_frame("exact_match_TEST_testing.xlsx")
+    db_comparator.export_data_frame("TMP_testing_folder/exact_match_TEST_testing.xlsx", data_format="xlsx", control_cell_size=False)
 
 def hamming_distances_TEST(db_comparator: db_compare.DB_comparator):
     """Performs a hamming distances test."""
     db_comparator.fast_hamming_distances.find_hamming_distances_for_all_databases(parallel=False)
-    db_comparator.export_data_frame("hamming_distances_TEST_testing.xlsx")
+    db_comparator.export_data_frame("TMP_testing_folder/hamming_distances_TEST_testing.xlsx", data_format="xlsx", control_cell_size=False)
 
 def aligner_TEST(db_comparator: db_compare.DB_comparator):
     """Performs an aligner test."""
     db_comparator.aligner.aligner_search_in_all_databases(parallel=False)
-    db_comparator.export_data_frame("aligner_TEST_testing.xlsx")
+    db_comparator.export_data_frame("TMP_testing_folder/aligner_TEST_testing.xlsx", data_format="xlsx", control_cell_size=False)
 
 def blast_TEST(db_comparator: db_compare.DB_comparator):
     """Performs a BLAST test."""
     db_comparator.blast.blast_make_database()
     db_comparator.blast.blast_search_and_analyze_matches_in_database()
-    db_comparator.export_data_frame("blast_TEST_testing.xlsx")
+    db_comparator.export_data_frame("TMP_testing_folder/blast_TEST_testing.xlsx", data_format="xlsx", control_cell_size=False)
 
     clean_up_blast_files()
 
@@ -139,10 +148,10 @@ def generate_table_of_results():
         ["Test Name", "Status", "File Comparison", "Execution Time (s)"],
         ["Initialization Test", *test_initialization()],
         ["Exporting Test", *test_exporting()],
-        ["Exact Match Test", *run_test(exact_match_TEST, "True_files/exact_match_TEST_true.xlsx", "exact_match_TEST_testing.xlsx")],
-        ["Hamming Distances Test", *run_test(hamming_distances_TEST, "True_files/hamming_distances_TEST_true.xlsx", "hamming_distances_TEST_testing.xlsx")],
-        ["Aligner Test", *run_test(aligner_TEST, "True_files/aligner_TEST_true.xlsx", "aligner_TEST_testing.xlsx")],
-        ["BLAST Test", *run_test(blast_TEST, "True_files/blast_TEST_true.xlsx", "blast_TEST_testing.xlsx")]
+        ["Exact Match Test", *run_test(exact_match_TEST, "TMP_testing_folder/True_files/exact_match_TEST_true.xlsx", "TMP_testing_folder/exact_match_TEST_testing.xlsx")],
+        ["Hamming Distances Test", *run_test(hamming_distances_TEST, "TMP_testing_folder/True_files/hamming_distances_TEST_true.xlsx", "TMP_testing_folder/hamming_distances_TEST_testing.xlsx")],
+        ["Aligner Test", *run_test(aligner_TEST, "TMP_testing_folder/True_files/aligner_TEST_true.xlsx", "TMP_testing_folder/aligner_TEST_testing.xlsx")],
+        ["BLAST Test", *run_test(blast_TEST, "TMP_testing_folder/True_files/blast_TEST_true.xlsx", "TMP_testing_folder/blast_TEST_testing.xlsx")]
     ]
 
     table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".2f")
