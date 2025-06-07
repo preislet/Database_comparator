@@ -15,12 +15,15 @@ The Database Comparator is a versatile tool designed for searching, analyzing, a
   - [Syntax of config file](#syntax-of-config-file)
   - [Configuration file .xlsx format](#configuration-file-xlsx-format)
   - [Inserting config file to program](#inserting-config-file-to-program)
+
+- [Loging](#loging)
+- [Exporting results](#exporting-results)
 - [Usage](#usage)
   - [Exact match](#exact-match)
   - [Aligner](#aligner)
   - [BLAST](#blast)
   - [Hamming distances](#hamming-distances)
-  - [Exporting results](#exporting-results)
+
 
 ## Installation
 Use the following command to install the program:
@@ -33,38 +36,45 @@ or clone the repository and install the program manually:
 git clone https://github.com/preislet/Database_comparator.git
 cd Database_comparator
 ```
-
+### Blast
+#### Windows:
 BLAST needs to be installed [manually](https://www.ncbi.nlm.nih.gov/books/NBK569861/).
 
-## Docker
-
-Docker file is provided in repository.
-To build and run the Docker image, follow these steps:
-
-#### Step 1:
-Run the following command to build the Docker image. Replace <image_name> with a name for your image, and optionally specify a tag (e.g., latest):
-
+#### Linux:
 ```shell
-docker build -t <image_name>:<tag> .
+sudo apt update
+sudo apt install ncbi-blast+
 ```
 
+## Docker
+To download prepared docker image use:
+
+```shell
+docker pull ghcr.io/preislet/database_comparator:latest
+```
+
+Optionaly docker file is provided in repository. To build the image from the Dockerfile, follow these steps:
+
+#### Step 1:
+Run the following command to build the Docker image. 
+```shell
+docker build -t db-comparator .
+```
 #### Step 2:
 After the image is successfully built, you can run a container from it:
 
 ```shell
-docker run -e PASSWORD=rstudio --rm -p 8787:8787 <image_name>:<tag>
+docker run -p 8888:8888 db-comparator
 ```
 
 #### Step 3:
-Open a web browser and go to http://localhost:8787.
+Open a web browser and go to http://localhost:8888.
 
-- Log in to RStudio using the default credentials:
-  - Username: rstudio
-  - Password: rstudio
+This will open the Jupyter Notebook interface where you can run the Database Comparator. Example notebooks are provided in the `notebooks` folder. You can also upload your own configuration file and data files to the container.
 
 ## Configuration file
 
-The configuration file is used to adjust the program properly to the data that the user wants to analyze. The configuration folder contains all the information from the database query and the databases against which we want to compare the query. Optionally, internal parameters for the Smith Waterman algorithm, BLAST, etc. can be set. If these parameters are not specified, they will be set to the default value. Configuration file can be in . txt or .xlsx format. We highly recommend using .xlsx format because it is more user-friendly.
+The configuration file is used to adjust the program properly to the data that the user wants to analyze. The configuration folder contains all the information from the database query and the databases against which we want to compare the query. Optionally, internal parameters for the Smith Waterman algorithm, BLAST, etc. can be set. If these parameters are not specified, they will be set to the default value. Configuration file can be in **.txt** or .**xlsx** format. **We highly recommend using .xlsx format** because it is more user-friendly.
 
 ### Configuration file .txt format
 
@@ -155,8 +165,11 @@ number_of_processors >number of processors for multprocessing(int)<
 ```
 
 #### Notes:
-if you want to use the **default value** for some parameter, you can skip it in the configuration file. Default values are shown in the table above.
+if you want to use the **default value** for some parameter, you can skip it in the configuration file. Default values are shown in the table above. 
 
+If the configuration file is not correct, the program will raise an error and inform the user about the problem. 
+
+**If the configuration file is not provided, the program will switch into testing only mode.**
 
 ### Configuration file .xlsx format
 
@@ -179,14 +192,58 @@ if __name__ == "__main__":
   db = db_compare.DB_comparator(cfg_file)
 ```
 
-This way the program will read the configuration file and set all parameters according to the configuration file. It also checks if the configuration file is correct. If the configuration file is not correct. Program also **preload the query database**. The other databases are loaded when needed due to memory optimization.
+
+## Loging
+Program is capable of logging all the actions that are performed. The Log folder (***DatabaseComparatorLogs***) is created in the directory where the program is run. User can specify log_roject and log_tag for better organization of the logs. Logs name also contains timestamp of the log creation.
+
+```python
+from Database_comparator import db_compare
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
+
+```
+
+Loging folder then can look like this:
+
+```
+DatabaseComparatorLogs/
+├── Project1
+│   ├── DB_comparator_run_2023-10-01_12-00-00_MyTag1.log
+│   ├── DB_comparator_run_2025-10-01_12-30-00_MyTag2.log
+│   └── DB_comparator_run_2025-10-01_13-00-00_MyTag3.log
+└── Project2
+    ├── DB_comparator_run_2025-10-01_14-00-00_MyTag1.log
+    ├── DB_comparator_run_2025-10-01_14-30-00_MyTag2.log
+    └── DB_comparator_run_2020-10-01_15-00-00_MyTag3.log
+```
+
+## Exporting results
+
+The program is also capable of exporting the results to a .csv/.xlsx file. The user can specify the path to the output file and the separator used to separate the multiple results for same sequence. The separator is defined in the **configuration file**. If the file exceeds the maximum allowed size for .xlsx files, the program will automatically generate .csv backup file.
+
+### Example of exporting results:
+
+```python
+from Database_comparator import db_compare
+
+if __name__ == "__main__":
+  cfg_file = 'path_to_config_file.txt'
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
+
+  # Data computing...
+
+  db.export_data_frame(output_file="MyAnalysis.xlsx", data_format="xlsx")
+  db.export_data_frame(output_file="MyAnalysis.csv", data_format="csv")
+```
+
+The dataframe can be also accessed using the **db.config.input_df** attribute.
 
 ## Usage
 
 ### Exact match
 
-The **exact_match** module is used to find exact matches between sequences in the query database and data databases. It allows you to perform exact match searches in single databases or across all configured databases. Users can also take advantage of multiprocessing to expedite the process.
-
+The **exact_match** module is used to find exact matches between sequences in the query database and data databases. It allows you to perform exact match searches in single databases or across all configured databases. Users can also take advantage of multiprocessing to speed up the search process.
 
 #### Example of exact match search in single database (first database in the configuration file):
 
@@ -195,7 +252,7 @@ from Database_comparator import db_compare
 
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
   db.exact_match.exact_match_search_in_single_database(database_index=0, parallel=True) # Multiprocessing enabled (parallel=True)
 ```
@@ -207,14 +264,14 @@ from Database_comparator import db_compare
 
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
   db.exact_match.exact_match_search_in_all_databases(parallel=True) # Multiprocessing enabled (parallel=True)
 ```
 
 ### Aligner
 
-The **aligner** module is based on the Smith-Waterman/Needleman-Wunsch algorithm for sequence alignment. It provides the capability to execute single-core or multiprocessing-based match searches. Algorithm complexity is O(n*m), where n is the length of the first sequence and m is the length of the second sequence. Tolernace parameter is used to determine the minimum score that the alignment must achieve to be considered a **hit**. The gap score, mismatch score, and match score are used to calculate the alignment score. The scoring matrix is used to determine the score for each pair of aligned residues. The alignment mode can be set to either global or local.
+The **aligner** module is based on the Smith-Waterman/Needleman-Wunsch algorithm for sequence alignment. It provides the capability to execute single-core or multiprocessing-based match searches. Algorithm complexity is **O(n*m)**, where n is the length of the first sequence and m is the length of the second sequence. Tolernace parameter is used to determine the minimum score that the alignment must achieve to be considered a **hit**. The gap score, mismatch score, and match score are used to calculate the alignment score. The scoring matrix is used to determine the score for each pair of aligned residues. The alignment mode can be set to either global or local.
 
 #### Example of Smith-Waterman algorithm search in single database (first database in the configuration file):
 
@@ -223,7 +280,7 @@ from Database_comparator import db_compare
 
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
   db.aligner.aligner_search_in_single_database(database_index=0, parallel=True) # Multiprocessing enabled (parallel=True)
 ```
@@ -235,14 +292,16 @@ from Database_comparator import db_compare
 
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
   db.aligner.aligner_search_in_all_databases(parallel=True) # Multiprocessing enabled (parallel=True)
 ```
 
 ### BLAST
 
-The **blast** module enables users to create BLAST databases, perform BLAST searches for matches, and analyze the results using the aligner. The E-value threshold is used to determine the significance of the match. The database name is used to specify the name of the BLAST database that will be created if needed. The output name is used to specify the name of the output file. In future versions, the user will be able to specify if they want to use aligner or hammer distance to analyze the results.
+The **blast** module enables users to create BLAST databases, perform BLAST searches for matches. The E-value threshold is used to determine the significance of the match. The database name is used to specify the name of the BLAST database that will be created if needed. The output name is used to specify the name of the output file. 
+
+In future versions, the user will be able to specify if they want to use aligner or hammer distance for analyzing the BLAST results.
 
 #### Example of BLAST search in database:
 
@@ -251,17 +310,17 @@ from Database_comparator import db_compare
 
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
   db.blast.blast_database_info() # Provides information about the BLAST database
   
-  db.blast.blast_make_database(name="BLAST_Database") # Creates BLAST database
+  db.blast.blast_make_database() # Creates BLAST database
   db.blast.blast_search_for_match_in_database() #Query is input database
   db.blast.analyze_matches_in_database() #BLAST output will be analyzed with aligner
 
   """
   User can also use this function.
-  db.blast.blast_search_and_analyze_matches_in_database() - This function will perform both BLAST search and analyze the results with aligner
+  db.blast.blast_search_and_analyze_matches_in_database() - This function will perform both BLAST search and write the results to the ouput dataframe.
   """
 ```
 
@@ -285,16 +344,16 @@ if __name__ == "__main__":
   db_matrices = db.hamming_distances.hamming_matrices_for_all_databases
 ```
 
-This aproach is very space consuming, so the user can also calculate Hamming distances without generating the matrix. This aproach is much faster and uses less memory. **Sequnces that are under the maximum allowed Hamming distance will be stored in the output file.** No further analysis of the matrix is possible, because was never generated.
+This aproach is very space consuming, so the user can also calculate Hamming distances **without generating the matrix**. This aproach is much faster and uses less memory. **Sequnces that are under the maximum allowed Hamming distance will be stored in the output file.** No further analysis of the matrix is possible, because was never generated.
 
 #### Example of fast Hamming distance search in single database (first database in the configuration file):
 
 ```python
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file,log_project="MyProject", log_tag="MyTag")
 
-  db_comp.fast_hamming_distances.find_hamming_distances_for_single_database(0, parallel=True) # Multiprocessing enabled (parallel=True)
+  db.fast_hamming_distances.find_hamming_distances_for_single_database(0, parallel=True) # Multiprocessing enabled (parallel=True)
 ```
 
 #### Example of fast Hamming distance search in all databases:
@@ -302,28 +361,9 @@ if __name__ == "__main__":
 ```python
 if __name__ == "__main__":
   cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
+  db = db_compare.DB_comparator(cfg_file, log_project="MyProject", log_tag="MyTag")
 
-  db_comp.fast_hamming_distances.find_hamming_distances_for_all_databases(parallel=True) # Multiprocessing enabled (parallel=True)
+  db.fast_hamming_distances.find_hamming_distances_for_all_databases(parallel=True) # Multiprocessing enabled (parallel=True)
 ```
 
-### Exporting results
-
-The program is also capable of exporting the results to a .csv/.xlsx file. The user can specify the path to the output file and the separator used to separate the multiple results for same sequence. The separator is defined in the **configuration file**. If the file exceeds the maximum allowed size for .xlsx files, the program will automatically generate .csv backup file.
-
-#### Example of exporting results:
-
-```python
-from Database_comparator import db_compare
-
-if __name__ == "__main__":
-  cfg_file = 'path_to_config_file.txt'
-  db = db_compare.DB_comparator(cfg_file)
-
-  # Data computing...
-
-  db.export_data_frame(output_file="MyAnalysis.xlsx", data_format="xlsx")
-  db.export_data_frame(output_file="MyAnalysis.csv", data_format="csv")
-```
-
-The dataframe can be also accessed using the **db.config.input_df** attribute.
+**We highly recommend using the fast Hamming distance search.**

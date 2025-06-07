@@ -24,7 +24,8 @@ class cfg:
         This constructor initializes various parameters and loads settings from the
         specified configuration file to customize the behavior of the program.
     """
-    def __init__(self, config_file=None, show_log_in_console:bool = False, log_write_append: Literal["w", "a"] = "w", log_tag:str = "") -> None:
+    def __init__(self, config_file=None, show_log_in_console:bool = False, 
+                    log_write_append: Literal["w", "a"] = "w", log_tag:str = "", log_project = "SequenceSearch") -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -40,10 +41,15 @@ class cfg:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
 
-        log_dir = "Logs"
+        if self.logger.hasHandlers(): self.logger.handlers.clear()
+
+        log_dir = "DatabaseComparatorLogs"
+
+        log_dir = os.path.join(log_dir, log_project)
         os.makedirs(log_dir, exist_ok=True)
 
         time = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+
         log_file = os.path.join(log_dir, f"DB_comparator_run_{time}_{log_tag}.log")
 
         file_handler = logging.FileHandler(log_file, mode=log_write_append)
@@ -109,6 +115,11 @@ class cfg:
 
 
         # Config file - supported .txt and .xlsx
+
+        if config_file is None:
+            self.logger.error("A configuration file was not provided. Please provide the configuration file and restart the program.")
+            raise Exception("A configuration file was not provided. Please provide the configuration file and restart the program.")
+        
         config_file_suffix: str = Path(config_file).suffix
 
         if config_file_suffix not in [".txt", ".xlsx"]: 

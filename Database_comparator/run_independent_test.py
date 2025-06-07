@@ -36,7 +36,7 @@ def test_initialization():
 
     try:
         start_time = time.time()
-        db_comparator = db_compare.DB_comparator(config_file, log_tag="initialization_test")
+        db_comparator = db_compare.DB_comparator(config_file, log_tag="initialization_test", log_project="Testing")
         end_time = time.time()
         elapsed_time = end_time - start_time
 
@@ -59,7 +59,7 @@ def test_exporting():
     config_file = r"TMP_testing_folder/test_config_file.txt"
     possible_formats = ['xlsx', 'csv', 'tsv', 'md']
     try:
-        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag="exporting_test")
+        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag="exporting_test", log_project="Testing")
 
         start_time = time.time()
         for data_format in possible_formats:
@@ -84,7 +84,7 @@ def run_test(test_function, true_file_path, output_file_name):
     config_file = r"TMP_testing_folder/test_config_file.txt"
 
     try:
-        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag=test_function.__name__)
+        db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag=test_function.__name__, log_project="Testing")
 
         # Measure search execution time
         start_time = time.time()

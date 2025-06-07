@@ -5,8 +5,7 @@ WORKDIR /home/database_comparator
 
 # Copy project folders into the container
 COPY notebooks/ notebooks/
-COPY tests/ tests/
-
+COPY README.md README.md
 # System dependencies (e.g. BLAST for your library)
 USER root
 RUN apt-get update && apt-get install -y ncbi-blast+ && apt-get clean
