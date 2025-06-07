@@ -82,6 +82,5 @@ class Fasta_maker:
             is used for conducting searches and alignments.
         """
         fasta_data = [self.__format_as_fasta(index - 1, sequence) for index, sequence in enumerate(self.data_dfs[0][self.sequence_column_name[0]], start=1)]
-
         with open(self.output_file_name, 'w') as f:
             f.write('\n'.join(fasta_data))
