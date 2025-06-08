@@ -1,0 +1,57 @@
+# Name of the workflow as it appears in the GitHub Actions UI
+name: Run Independent Tests
+
+# Defines when this workflow should run
+on:
+  # Trigger the workflow on a 'push' event
+  push:
+    # Specify the branches on which this workflow should run.
+    # Replace 'main' with 'master' if that's your default branch.
+    branches:
+      - main
+    # Optionally, restrict the workflow to run only if specific files are changed.
+    # If you want it to run on any push, you can remove this 'paths' section.
+    paths:
+      - '**.py'                   # Any Python file       # Trigger on changes to the new orchestration script
+      - 'Database_comparator/**'  # Include changes within the Database_comparator directory
+
+# Defines the jobs that run in this workflow
+jobs:
+  test:
+    # Specifies the type of machine to run the job on
+    runs-on: ubuntu-latest
+
+    # Sequence of steps to be executed within the 'test' job
+    steps:
+    - name: Checkout code
+      # Uses the official 'actions/checkout' action to fetch your repository's code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      # Uses the official 'actions/setup-python' action to set up a Python environment
+      uses: actions/setup-python@v5
+      with:
+        # Specifies the Python version to use. '3.x' gets the latest stable 3.x version.
+        python-version: '3.x'
+
+    - name: Install dependencies
+      # This step installs the Python packages your test scripts need.
+      run: |
+        python -m pip install --upgrade pip
+        # Install general dependencies needed by db_testing.py and run_independent_test.py
+        pip install pandas numpy tabulate openpyxl
+        # Install your 'Database_comparator' project in "editable" mode.
+        # This allows Python to find the 'Database_comparator' package and its modules
+        # (like 'db_compare') when db_testing.py is run from the root.
+        # This assumes you have a setup.py or pyproject.toml in your repository's root
+        # that correctly defines the 'Database_comparator' package.
+        pip install -e .
+
+    - name: Run complex test setup and script
+      # Command to execute your 'db_testing.py' script.
+      # This script will create temporary files, generate 'run_independent.py',
+      # execute it, and then clean up.
+      # Because db_testing.py uses subprocess.run with 'check=True',
+      # if run_independent_test.py fails (exits with a non-zero code),
+      # this GitHub Actions step will also fail, marking the workflow as failed.
+      run: python Database_comparator/db_testing.py

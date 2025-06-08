@@ -10,7 +10,7 @@ import Database_comparator.db_compare as db_compare
 
 
 
-
+FULL_PASSED = True
 def clean_up_blast_files():
         # Cleanup temporary filesP
     if os.path.exists("Fasta_files"):
@@ -48,6 +48,8 @@ def test_initialization():
         if db_comparator.config != db_comparator.fast_hamming_distances.config: passed = False
         if db_comparator.config != db_comparator.blast.config: passed = False
 
+        FULL_PASSED = FULL_PASSED and passed
+
         return "✅ Success" if passed else "❌ Failed", "N/A", elapsed_time
 
     except Exception as e:
@@ -76,7 +78,8 @@ def test_exporting():
         for data_format in possible_formats:
             if os.path.exists("TEST_exporting." + data_format):
                 os.remove("TEST_exporting." + data_format)
-
+        
+        FULL_PASSED = False
         return "❌ Failed", "N/A", "N/A"
 
 def run_test(test_function, true_file_path, output_file_name):
@@ -105,6 +108,7 @@ def run_test(test_function, true_file_path, output_file_name):
 
         if comparison_status == "❌ Mismatch":
             # If mismatch, print the rows that differ
+            FULL_PASSED = False
             diff = pd.concat([true_file, test_file]).drop_duplicates(keep=False)
             print("Differences found:")
             print(diff)
@@ -117,6 +121,7 @@ def run_test(test_function, true_file_path, output_file_name):
     except Exception as e:
         if os.path.exists(output_file_name): os.remove(output_file_name)
         clean_up_blast_files()
+        FULL_PASSED = False
         return "❌ Failed", "❌ Not compared", "N/A"
 
 def exact_match_TEST(db_comparator: db_compare.DB_comparator):
@@ -157,8 +162,12 @@ def generate_table_of_results():
     table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".2f")
     print(table)
 
+    return FULL_PASSED
+
 def main():
-    generate_table_of_results()
+    return generate_table_of_results()
 
 if __name__ == "__main__":
-    main()
+    exit_status = main()
+    if exit_status: sys.exit(0)
+    else: sys.exit(1)
