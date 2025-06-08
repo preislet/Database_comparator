@@ -163,12 +163,6 @@ class TestDatabaseComparator:
 if __name__ == "__main__":
     test = TestDatabaseComparator()
     exit_code = test.start()
-
-    if exit_code == 0:
-        print("All tests passed successfully.")
-        sys.exit(0)
-    else:
-        print(f"Tests failed with exit code {exit_code}.")
-        sys.exit(exit_code)
+    sys.exit(exit_code)
     
     
