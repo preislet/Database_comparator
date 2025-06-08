@@ -211,6 +211,9 @@ class cfg:
             line = line.split()
             if len(line) == 0:
                 continue
+            if len(line) < 2 and line[0].upper() != "#".upper():
+                self.logger.error(f"line: {line}... Error in config file. Please check your config file. Every line must have at least two elements.")
+                raise Exception(f"line: {line}... Error in config file. Please check your config file. Every line must have at least two elements.")
             
 
             if line[0].upper() == "DB":

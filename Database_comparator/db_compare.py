@@ -35,7 +35,7 @@ class DB_comparator:
         """
 
         self.test = TestDatabaseComparator()
-        if config_file == "":
+        if len(config_file) == 0 or not isinstance(config_file, str):
             print("The config_file parameter must be a string representing the path to the configuration file.")
             print("Skipping initialization of DB_comparator. Only testing will be usable.")
         else:

@@ -42,6 +42,7 @@ class hamming_distance:
             This method iterates over all databases and analyzes their respective Hamming distance matrices.
         """
         self.config.reset_before_analysis()
+        self.config.logger.warning("Hamming distance class is no longer maintained and uncontroled bahavior may occur. Use the FastHammingDistance class instead.")
         for i in range(len(self.hamming_matrices_for_all_databases)):
             if self.hamming_matrices_for_all_databases[i] is None:
                 return
@@ -63,7 +64,7 @@ class hamming_distance:
             This method analyzes a Hamming distance matrix for a specific database and inserts matching
             results into the input DataFrame using the configuration settings.
         """
-
+        self.config.logger.warning("Hamming distance class is no longer maintained and uncontroled bahavior may occur. Use the FastHammingDistance class instead.")
         if self.hamming_matrices_for_all_databases[database_index] is None:
             return
 
@@ -91,6 +92,7 @@ class hamming_distance:
             This method computes Hamming distances between query sequences and sequences from a single
             database and stores the results in the appropriate data structures.
         """
+        self.config.logger.warning("Hamming distance class is no longer maintained and uncontroled bahavior may occur. Use the FastHammingDistance class instead.")
         data_df = self.config.load_database(database_index=database_index, engine="python")
         data_sequences = (data_df[self.config.data_info[database_index]["sequence_column_name"]]).tolist()
 
@@ -119,6 +121,7 @@ class hamming_distance:
         Note:
             This method computes Hamming distances for all databases and can optionally analyze the results.
         """
+        self.config.logger.warning("Hamming distance class is no longer maintained and uncontroled bahavior may occur. Use the FastHammingDistance class instead.")
         self.hamming_matrices_for_all_databases = [None for _ in range(len(self.config.data_info))]
         for i in range(len(self.config.data_info)):
             self.find_hamming_distances_for_single_database(i, analyze=analyze)
