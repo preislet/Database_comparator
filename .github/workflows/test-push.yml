@@ -12,7 +12,9 @@ on:
     # Optionally, restrict the workflow to run only if specific files are changed.
     # If you want it to run on any push, you can remove this 'paths' section.
     paths:
-      - '**.py'                   # Any Python file       # Trigger on changes to the new orchestration script
+      - '**.py'                   # Any Python file
+      - 'run_independent_test.py' # Specifically trigger on changes to your main test script
+      - 'db_testing.py'           # Trigger on changes to the new orchestration script
       - 'Database_comparator/**'  # Include changes within the Database_comparator directory
 
 # Defines the jobs that run in this workflow
@@ -38,7 +40,7 @@ jobs:
       # This step installs the Python packages your test scripts need.
       run: |
         python -m pip install --upgrade pip
-        # Install general dependencies needed by db_testing.py and run_independent_test.py
+        # Install general Python dependencies
         pip install pandas numpy tabulate openpyxl
         # Install your 'Database_comparator' project in "editable" mode.
         # This allows Python to find the 'Database_comparator' package and its modules
@@ -46,6 +48,10 @@ jobs:
         # This assumes you have a setup.py or pyproject.toml in your repository's root
         # that correctly defines the 'Database_comparator' package.
         pip install -e .
+        # Install BLAST+ (Basic Local Alignment Search Tool)
+        # This is a command-line tool often required for bioinformatics tasks.
+        sudo apt-get update
+        sudo apt-get install -y ncbi-blast+
 
     - name: Run complex test setup and script
       # Command to execute your 'db_testing.py' script.
