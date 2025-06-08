@@ -110,8 +110,15 @@ class TestDatabaseComparator:
 
         self.__generate_config_file()
         self.__generate_python_script()
-        subprocess.run([sys.executable, "run_independent.py"], check=True)
+
+        exit_code = 0
+        try:
+            subprocess.run(["python", "run_independent.py"], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the script: {e}")
+            exit_code = e.returncode
         self.__clean_up()
+        return exit_code
 
     
     def __generate_config_file(self):
@@ -152,5 +159,15 @@ class TestDatabaseComparator:
         
 
 
+if __name__ == "__main__":
+    test = TestDatabaseComparator()
+    exit_code = test.start()
 
+    if exit_code == 0:
+        print("All tests passed successfully.")
+        sys.exit(0)
+    else:
+        print(f"Tests failed with exit code {exit_code}.")
+        sys.exit(exit_code)
+    
     
