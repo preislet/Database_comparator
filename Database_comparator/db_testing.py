@@ -112,11 +112,8 @@ class TestDatabaseComparator:
         self.__generate_python_script()
 
         exit_code = 0
-        try:
-            subprocess.run(["python", "run_independent.py"], check=True)
-        except subprocess.CalledProcessError as e:
-            print(f"An error occurred while running the script: {e}")
-            exit_code = e.returncode
+        try: subprocess.run(["python", "run_independent.py"], check=True)
+        except subprocess.CalledProcessError as e: exit_code = e.returncode
         self.__clean_up()
         return exit_code
 
@@ -146,8 +143,12 @@ class TestDatabaseComparator:
     def __generate_python_script(self):
         path = "run_independent.py"
         file = open(path, "w")
+        file.write("import sys\n")
         file.write("from Database_comparator import run_independent_test\n")
-        file.write("run_independent_test.main()\n")
+        file.write("exit_code = run_independent_test.main()\n")
+        file.write("if exit_code == 0: sys.exit(0)\n")
+        file.write("else: sys.exit(exit_code)\n")
+
         file.close()
 
     def __clean_up(self):

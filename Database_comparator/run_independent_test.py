@@ -33,6 +33,7 @@ def clean_up_blast_files():
 def test_initialization():
     """Tests if the DB_comparator class initializes correctly and measures initialization time."""
     config_file = r"TMP_testing_folder/test_config_file.txt"
+    global FULL_PASSED
 
     try:
         start_time = time.time()
@@ -60,6 +61,7 @@ def test_exporting():
     """Tests if the DB_comparator class exports data frames correctly."""
     config_file = r"TMP_testing_folder/test_config_file.txt"
     possible_formats = ['xlsx', 'csv', 'tsv', 'md']
+    global FULL_PASSED
     try:
         db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag="exporting_test", log_project="Testing")
 
@@ -85,7 +87,7 @@ def test_exporting():
 def run_test(test_function, true_file_path, output_file_name):
     """Runs a test function, checks search success, file comparison, and measures execution time."""
     config_file = r"TMP_testing_folder/test_config_file.txt"
-
+    global FULL_PASSED
     try:
         db_comparator = db_compare.DB_comparator(config_file, show_log_in_console=False, log_tag=test_function.__name__, log_project="Testing")
 
@@ -162,12 +164,14 @@ def generate_table_of_results():
     table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".2f")
     print(table)
 
+    global FULL_PASSED
     return FULL_PASSED
 
 def main():
-    return generate_table_of_results()
+    exit_code =  generate_table_of_results()
+    if exit_code: return 0
+    else: return 1
 
 if __name__ == "__main__":
     exit_status = main()
-    if exit_status: sys.exit(0)
-    else: sys.exit(1)
+    sys.exit(exit_status)
