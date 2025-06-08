@@ -11,8 +11,9 @@ class Aligner:
     It allows for single-core and multi-core parallel processing for aligning sequences from the input DataFrame
     with sequences from databases.
     """
-    def __init__(self, config: cfg) -> None:
-        self.config = config
+    def __init__(self, config: cfg ) -> None:
+        self.config: cfg = config
+
         self.query_sequences = np.array(
             self.config.input_df[self.config.input_file_info["sequence_column_name"]].tolist(), dtype=object
         )
