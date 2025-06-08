@@ -13,8 +13,6 @@ on:
     # If you want it to run on any push, you can remove this 'paths' section.
     paths:
       - '**.py'                   # Any Python file
-      - 'run_independent_test.py' # Specifically trigger on changes to your main test script
-      - 'db_testing.py'           # Trigger on changes to the new orchestration script
       - 'Database_comparator/**'  # Include changes within the Database_comparator directory
 
 # Defines the jobs that run in this workflow
