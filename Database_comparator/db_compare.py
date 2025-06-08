@@ -70,6 +70,21 @@ class DB_comparator:
         """
         excel_max_cell_string_len: int = 32767 - 17
 
+        sufix = output_file.split(".")[-1]
+
+        
+        if sufix not in ["xlsx", "csv", "tsv", "md"]:
+            self.config.logger.warning(f"The output file {output_file} has an unknown suffix. The data frame will be exported as {output_file}.{data_format}")
+            output_file_without_sufix = output_file.split(".")[0]
+            output_file = f"{output_file_without_sufix}.{data_format}"
+
+        elif sufix == data_format:
+            self.config.logger.info(f"The output file {output_file} has the same suffix as the data format. The data frame will be exported to {output_file}.")
+        else:
+            self.config.logger.warning(f"The output file {output_file} has a different suffix than the data format. The data frame will be exported to {output_file}")
+            data_format = sufix
+
+
         if control_cell_size:
             longest_cell_string = self.config.input_df.applymap(lambda x: len(str(x)) > excel_max_cell_string_len)
             if longest_cell_string.any().any() and data_format == "xlsx":

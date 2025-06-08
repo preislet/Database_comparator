@@ -93,7 +93,7 @@ class cfg:
 
         # Blastp Algorithm
         self.e_value: float = 0.05
-        self.blast_database_name: str = "clip_seq_db"
+        self.blast_database_name: str = "BLAST_SEQUENCE_DATABASE"
         self.blast_database_full_name: str = self.blast_database_path + "//" + self.blast_database_name
         self.blast_output_name: str = "blastp_output.txt"
         self.blast_default_input_query: str = self.blast_query_files_path + "//QUERY.fasta"
@@ -360,6 +360,10 @@ class cfg:
         query_table = query_table.iloc[1:, 1:]
         query_table = query_table.reset_index(drop=True)
 
+        if query_table.empty:
+            self.logger.critical("Query table is empty. Please check your configuration file.")
+            raise Exception("Query table is empty. Please check your configuration file.")
+
         self.input_file_path = query_table["Path"][0]
         self.input_file_info = {
             "path": self.input_file_path,
@@ -372,6 +376,10 @@ class cfg:
         database_table.columns = database_table.iloc[0]
         database_table = database_table.iloc[1:, 1:]
         database_table = database_table.reset_index(drop=True)
+
+        if database_table.empty:
+            self.logger.critical("Database table is empty. Please check your configuration file.")
+            raise Exception("Database table is empty. Please check your configuration file.")
         
         for i in range(len(database_table)):
             if pd.isnull(database_table["Path"][i]): break
@@ -410,28 +418,31 @@ class cfg:
 
         Aligner_info = transform_dataframe(Aligner_info)
 
-        if not pd.isnull(Aligner_info["SWA_tolerance"][0]): self.tolerance = float(Aligner_info["SWA_tolerance"][0])
-        if not pd.isnull(Aligner_info["SWA_gap_score"][0]):
-            self.aligner.open_gap_score = float(Aligner_info["SWA_gap_score"][0])
-            self.aligner.extend_gap_score = float(Aligner_info["SWA_gap_score"][0])
+        if not Aligner_info.empty:
+            if not pd.isnull(Aligner_info["SWA_tolerance"][0]): self.tolerance = float(Aligner_info["SWA_tolerance"][0])
+            if not pd.isnull(Aligner_info["SWA_gap_score"][0]):
+                self.aligner.open_gap_score = float(Aligner_info["SWA_gap_score"][0])
+                self.aligner.extend_gap_score = float(Aligner_info["SWA_gap_score"][0])
 
-        if not pd.isnull(Aligner_info["SWA_mismatch_score"][0]): self.aligner.mismatch_score = float(Aligner_info["SWA_mismatch_score"][0])
-        if not pd.isnull(Aligner_info["SWA_match_score"][0]): self.aligner.match_score = float(Aligner_info["SWA_match_score"][0])
+            if not pd.isnull(Aligner_info["SWA_mismatch_score"][0]): self.aligner.mismatch_score = float(Aligner_info["SWA_mismatch_score"][0])
+            if not pd.isnull(Aligner_info["SWA_match_score"][0]): self.aligner.match_score = float(Aligner_info["SWA_match_score"][0])
 
-        try:
-            if not pd.isnull(Aligner_info["SWA_matrix"][0]): self.aligner.substitution_matrix = Align.substitution_matrices.load(Aligner_info["SWA_matrix"][0])
+            try:
+                if not pd.isnull(Aligner_info["SWA_matrix"][0]): self.aligner.substitution_matrix = Align.substitution_matrices.load(Aligner_info["SWA_matrix"][0])
 
-        except Exception as e:
-            err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
-            self.logger.error(err)
-            raise Exception(err)
-        
-        if not pd.isnull(Aligner_info["SWA_mode"][0]):
-            if not Aligner_info["SWA_mode"][0].lower() in ["local", "global"]:
-                err = "Mode not found. Please use only global/local"
+            except Exception as e:
+                err = f"Substitution matrix not found. Substitution matrices: {Align.substitution_matrices.load()}"
                 self.logger.error(err)
                 raise Exception(err)
-            self.aligner.mode = Aligner_info["SWA_mode"][0].lower()
+            
+            if not pd.isnull(Aligner_info["SWA_mode"][0]):
+                if not Aligner_info["SWA_mode"][0].lower() in ["local", "global"]:
+                    err = "Mode not found. Please use only global/local"
+                    self.logger.error(err)
+                    raise Exception(err)
+                self.aligner.mode = Aligner_info["SWA_mode"][0].lower()
+        else:
+            self.logger.warning("Aligner settings not found in the configuration file. Using default values.")
 
 
         # -------------- Hamming distance --------------
@@ -445,8 +456,10 @@ class cfg:
             raise Exception(f"Error loading Excel file: {e}")
         
         Hamming_info = transform_dataframe(Hamming_info)
-
-        if not pd.isnull(Hamming_info["Max_hamming_distance"][0]): self.max_hamming_distance = int(Hamming_info["Max_hamming_distance"][0])
+        if not Hamming_info.empty:
+            if not pd.isnull(Hamming_info["Max_hamming_distance"][0]): self.max_hamming_distance = int(Hamming_info["Max_hamming_distance"][0])
+        else:
+            self.logger.warning("Hamming distance settings not found in the configuration file. Using default values.")
 
 
         # -------------- Blast --------------
@@ -460,10 +473,13 @@ class cfg:
             raise Exception(f"Error loading Excel file: {e}")
         
         Blast_info = transform_dataframe(Blast_info)
-
-        if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = float(Blast_info["BLAST_e_value"][0])
-        if not pd.isnull(Blast_info["BLAST_database_name"][0]): self.blast_database_name = Blast_info["BLAST_database_name"][0]
-        if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
+  
+        if not Blast_info.empty:
+            if not pd.isnull(Blast_info["BLAST_e_value"][0]): self.e_value = float(Blast_info["BLAST_e_value"][0])
+            if not pd.isnull(Blast_info["BLAST_database_name"][0]): self.blast_database_name = Blast_info["BLAST_database_name"][0]
+            if not pd.isnull(Blast_info["BLAST_output_name"][0]): self.blast_output_name = Blast_info["BLAST_output_name"][0]
+        else:
+            self.logger.warning("BLAST settings not found in the configuration file. Using default values.")
 
         self.logger.info("Configuration from xlsx file loaded successfully.")
 
@@ -483,12 +499,13 @@ class cfg:
             except Exception as e:
                 self.logger.error(f"Error loading csv file: {e}")
                 raise Exception(f"Error loading csv file: {e}")
+            
         elif Path(path).suffix in [".xlsx", ".xls"]:
             try:
                 self.input_df = pd.DataFrame(pd.read_excel(self.input_file_info["path"]))
             except Exception as e:
-                self.logger.error(f"Error loading Excel file: {e}")
-                raise Exception(f"Error loading Excel file: {e}")
+                self.logger.error(f"Error loading Excel file: {e}. Please check if the file is in the correct format.")
+                raise Exception(f"Error loading Excel file: {e}. Please check if the file is in the correct format.")
         elif Path(path).suffix in [".RData", ".Rbin", ".RDATA"]:
             try:
                 data = pr.read_r(path)

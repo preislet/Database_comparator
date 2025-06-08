@@ -1,0 +1,66 @@
+# Name of the workflow as it appears in the GitHub Actions UI
+name: Publish Python Package to PyPI
+
+# Defines when this workflow should run
+on:
+  # Trigger the workflow on a 'push' event
+  push:
+    # Specify the branches on which this workflow should run.
+    # Replace 'main' with 'master' if that's your default branch.
+    branches:
+      - main
+    # Restrict the workflow to run only if specific files are changed.
+    # This ensures it doesn't run for irrelevant changes.
+    paths:
+      - '**.py'             # Any Python file
+      - 'setup.py'          # For traditional Python projects
+
+# Defines the jobs that run in this workflow
+jobs:
+  publish:
+    # This conditional statement ensures the job only runs if the commit message
+    # contains the word 'publish'. This provides control over publishing.
+    if: contains(github.event.head_commit.message, 'publish')
+    # Specifies the type of machine to run the job on
+    runs-on: ubuntu-latest
+
+    # Sequence of steps to be executed within the 'publish' job
+    steps:
+    - name: Checkout code
+      # Uses the official 'actions/checkout' action to fetch your repository's code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      # Uses the official 'actions/setup-python' action to set up a Python environment
+      uses: actions/setup-python@v5
+      with:
+        # Specifies the Python version to use. '3.x' gets the latest stable 3.x version.
+        # You can specify a more precise version like '3.9', '3.10', '3.11' if needed.
+        python-version: '3.x'
+
+    - name: Install dependencies
+      # Commands to install necessary Python packages for building and uploading
+      run: |
+        # Upgrade pip to ensure you have the latest version
+        python -m pip install --upgrade pip
+        # Install 'setuptools' and 'wheel' for building distributions,
+        # and 'twine' for securely uploading to PyPI.
+        pip install setuptools wheel twine
+
+    - name: Build package
+      # Command to build the source distribution (sdist) and a wheel distribution (bdist_wheel)
+      run: python setup.py sdist bdist_wheel
+      # If your project uses pyproject.toml and a build backend like 'hatch' or 'flit',
+      # you might need to use 'python -m build' instead:
+      # run: python -m build
+
+    - name: Publish package to PyPI
+      # Environment variables for 'twine' to authenticate with PyPI
+      env:
+        # '__token__' is a special username for PyPI API tokens
+        TWINE_USERNAME: __token__
+        # Retrieves the PyPI API token from your GitHub Secrets.
+        # Make sure you have a secret named 'PYPI_API_TOKEN' in your repo settings.
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      # Command to upload all distribution files from the 'dist/' directory to PyPI
+      run: twine upload dist/*
