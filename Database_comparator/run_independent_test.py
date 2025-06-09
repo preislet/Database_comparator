@@ -51,7 +51,7 @@ def test_initialization():
 
         FULL_PASSED = FULL_PASSED and passed
 
-        return "✅ Success" if passed else "❌ Failed", "N/A", elapsed_time
+        return "✅ Success" if passed else "❌ Failed", "N/A", round(elapsed_time, 2)
 
     except Exception as e:
         print(f"Initialization test failed with error: {e}")
@@ -71,10 +71,10 @@ def test_exporting():
             os.remove("TEST_exporting." + data_format)
         end_time = time.time()
 
-        final_time = (end_time - start_time)/len(possible_formats)
+        final_time = (end_time - start_time)
 
         
-        return "✅ Success", "N/A", final_time
+        return "✅ Success", "N/A", round(final_time, 2)
 
     except Exception as e:
         for data_format in possible_formats:
@@ -118,7 +118,7 @@ def run_test(test_function, true_file_path, output_file_name):
         os.remove(output_file_name)
         clean_up_blast_files()
 
-        return search_status, comparison_status, elapsed_time
+        return search_status, comparison_status, round(elapsed_time, 2)
 
     except Exception as e:
         if os.path.exists(output_file_name): os.remove(output_file_name)
@@ -162,16 +162,16 @@ def generate_table_of_results():
     ]
 
     table = tabulate(results, headers="firstrow", tablefmt="fancy_grid", floatfmt=".2f")
-    print(table)
 
     global FULL_PASSED
-    return FULL_PASSED
+    return FULL_PASSED, table
 
 def main():
-    exit_code =  generate_table_of_results()
-    if exit_code: return 0
-    else: return 1
+    exit_code, table =  generate_table_of_results()
+    if exit_code: return 0, table
+    else: return 1, table
 
 if __name__ == "__main__":
-    exit_status = main()
+    exit_status, table = main()
+    print(table)
     sys.exit(exit_status)

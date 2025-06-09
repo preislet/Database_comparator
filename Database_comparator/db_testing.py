@@ -93,6 +93,7 @@ class TestDatabaseComparator:
         self.blast_true_file = BlastTrueFile().DB_dataframe
         self.hamming_true_file = HammingTrueFile().DB_dataframe
         self.query_file = QueryFile().DB_dataframe
+        self.exit_code = 0
 
     def start(self):
 
@@ -112,11 +113,23 @@ class TestDatabaseComparator:
         self.__generate_python_script()
 
         exit_code = 0
-        try: subprocess.run(["python", "run_independent.py"], check=True)
-        except subprocess.CalledProcessError as e: exit_code = e.returncode
-        self.__clean_up()
-        return exit_code
+        try:
+            result = subprocess.run(
+                ["python", "run_independent.py"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                check=True
+            )
+            # Zobrazit výstup ze stdout i stderr přesně jako v terminálu
+            print(result.stdout)
+        except subprocess.CalledProcessError as e:
+            print(e.stdout)
+            print(e.stderr)
+            exit_code = e.returncode
 
+        self.__clean_up()
+        self.exit_code = exit_code
     
     def __generate_config_file(self):
         path = "TMP_testing_folder/test_config_file.txt"
@@ -142,14 +155,25 @@ class TestDatabaseComparator:
 
     def __generate_python_script(self):
         path = "run_independent.py"
-        file = open(path, "w")
-        file.write("import sys\n")
-        file.write("from Database_comparator import run_independent_test\n")
-        file.write("exit_code = run_independent_test.main()\n")
-        file.write("if exit_code == 0: sys.exit(0)\n")
-        file.write("else: sys.exit(exit_code)\n")
+        with open(path, "w", encoding="utf-8") as file:
+            file.write("import sys\n")
+            file.write("try:\n")
+            file.write("    from Database_comparator import run_independent_test\n")
+            file.write("except ImportError:\n")
+            file.write("    import os\n")
+            file.write("    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))\n")
+            file.write("    sys.path.append(project_root)\n")
+            file.write("    from Database_comparator import run_independent_test\n")
+            file.write("\n")
+            file.write("exit_code, table = run_independent_test.main()\n")
+            file.write("try:\n")
+            file.write("    print(table)\n")
+            file.write("except UnicodeEncodeError:\n")
+            file.write("    sys.stdout.buffer.write((str(table) + '\\n').encode('utf-8'))\n")
+            file.write("    sys.stdout.buffer.flush()\n")
+            file.write("sys.exit(exit_code)\n")
 
-        file.close()
+
 
     def __clean_up(self):
         """
@@ -162,7 +186,7 @@ class TestDatabaseComparator:
 
 if __name__ == "__main__":
     test = TestDatabaseComparator()
-    exit_code = test.start()
-    sys.exit(exit_code)
+    test.start()
+    sys.exit(test.exit_code)
     
     
