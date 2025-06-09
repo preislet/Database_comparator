@@ -11,7 +11,7 @@ with codecs.open(os.path.join(here, "README.md"), encoding="utf-8") as fh:
 with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
-VERSION = '1.1.4'
+VERSION = '1.1.5'
 DESCRIPTION = 'Bioinformatics tool for compering large sequence files'
 LONG_DESCRIPTION = 'Bioinformatics tool for compering large sequence files with exact matching, sequence alignment, BLAST searches,and calculating Hamming distances between sequences.'
 
