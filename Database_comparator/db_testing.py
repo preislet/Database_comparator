@@ -129,6 +129,7 @@ class TestDatabaseComparator:
             exit_code = e.returncode
 
         self.__clean_up()
+        
         self.exit_code = exit_code
     
     def __generate_config_file(self):
