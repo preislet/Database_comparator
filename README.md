@@ -225,6 +225,7 @@ configuration_dict = {
 
 
 db = db_compare.DB_comparator(config_file=CONFIG_FILE, log_tag="Aligner", log_project="Aligner Project", configuration_dict=configuration_dict) # configuration dict passed to the program
+
 db.exact_match.exact_match_search_in_all_databases(parallel=True)
 db.export_data_frame(output_file=OUTPUT_FILE, data_format=OUTPUT_FORMAT)
 
