@@ -65,11 +65,21 @@ docker build -t db-comparator .
 After the image is successfully built, you can run a container from it:
 
 ```shell
-docker run -p 8888:8888 db-comparator
+docker run -d \
+  --name database_comparator \
+  -p 8890:8888 \
+  -v /mnt/your_data_folder:/home/database_comparator/data \
+  -e NB_UID=$(id -u your_user) \
+  -e NB_GID=$(id -g your_user) \
+  --user root \
+  --cpus=your_cpu_count \
+  ghcr.io/preislet/database_comparator:latest \
+  start-notebook.py --NotebookApp.token='password'
+
 ```
 
 #### Step 3:
-Open a web browser and go to http://localhost:8888.
+Open a web browser and go to http://localhost:8890.
 
 This will open the Jupyter Notebook interface where you can run the Database Comparator. Example notebooks are provided in the `notebooks` folder. You can also upload your own configuration file and data files to the container.
 
@@ -178,6 +188,48 @@ If the configuration file is not correct, the program will raise an error and in
 
 The first sheet is the **Query** sheet, where the user can specify the query database and the databases against which they want to compare the query. It also contains the **Sepataor** parameter, which determines how multiple results are stored in the output file and **Number of processors** parameter, which determines the number of CPU cores to use for multiprocessing. The **Aligner** sheet is used to set parameters for the Smith-Waterman algorithm, such as tolerance, gap score, mismatch score, match score, scoring matrix, and alignment mode. The **BLAST** sheet is used to configure BLAST searches, including the E-value threshold, database name, and output file name. The **Hamming_distance** sheet is used to set the maximum allowed Hamming distance.
 
+User also can use the **Simplified_config_file.xlsx** file, which contains only the **Query** sheet, where the user can only specify the databases where they want to search for matches. All other parameters (Query, Separator, Number of processors, Aligner, BLAST, Hamming distance) are set to default values or must be pass to the program as a dictionary.
+
+```python
+from Database_comparator import db_compare
+
+
+CONFIG_FILE = "DEFAULT_SIMPLE_config_file.xlsx" # Path to the configuration file containing database connection details
+OUTPUT_FILE = "exact_out.csv" # Path to the output file where results will be saved
+OUTPUT_FORMAT = "csv"  # Output format can be 'csv','xlsx', 'tsv' or 'md'
+
+configuration_dict = {
+    # Query connection details
+    "Query_path": "test_query.xlsx", # Path to the query database file
+    "Query_sequence_column": "sequence", # Column name in the query database containing sequences
+
+    # Number of processors to use for parallel processing
+    "Number_of_processors": 3,
+
+    # Aligner settings
+    "Aligner_tolerance": 0.9, # Tolerance for the aligner (0 to 1) - higher means more similar
+    "Aligner_gap_score": -1000, # Penalty for gaps in the alignment
+    "Aligner_mismatch_score": -1, # Penalty for mismatches in the alignment
+    "Aligner_match_score": 2, # Score for matches in the alignment
+    "Aligner_matrix": None, # Scoring matrix to use for alignment (e.g., BLOSUM62, PAM250) or None for using match/mismatch scores
+    "Aligner_mode": "global", # Alignment mode: 'global' or 'local'
+    
+    # Hamming distance settings
+    "Hamming_distance_max_distance": 3, # Maximum Hamming distance to consider sequences as similar
+
+    # Blast settings
+    "Blast_e_value": 0.05, # E-value threshold for BLAST searches
+    "Blast_name_of_created_database": "blast_db", # Name of the BLAST database to create
+    "Blast_output_name": "blast_output.txt", # Name of the BLAST output file
+}
+
+
+db = db_compare.DB_comparator(config_file=CONFIG_FILE, log_tag="Aligner", log_project="Aligner Project", configuration_dict=configuration_dict) # configuration dict passed to the program
+db.exact_match.exact_match_search_in_all_databases(parallel=True)
+db.export_data_frame(output_file=OUTPUT_FILE, data_format=OUTPUT_FORMAT)
+
+```
+This is all parameters that can be set in the configuration file. User can also pass some of these parameters as a dictionary to the program. This is useful when the user wants to use the default configuration file but wants to change some parameters. the configuration dictionary **will override the parameters in the configuration file**.
 #### Notes:
 
 - The **Query** sheet is required in the configuration file.

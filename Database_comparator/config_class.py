@@ -25,7 +25,8 @@ class cfg:
         specified configuration file to customize the behavior of the program.
     """
     def __init__(self, config_file=None, show_log_in_console:bool = False, 
-                    log_write_append: Literal["w", "a"] = "w", log_tag:str = "", log_project = "SequenceSearch") -> None:
+                    log_write_append: Literal["w", "a"] = "w", log_tag:str = "", log_project = "SequenceSearch", 
+                    configuration_dict:dict = None) -> None:
         """
         Initialize the configuration class for a bioinformatics sequence analysis program.
 
@@ -129,6 +130,10 @@ class cfg:
         else:
             self.logger.warning("Loading configuration from .txt file. Consider using .xlsx for better readability.")
             self.__load_config_txt(config_file)
+        
+        if configuration_dict is not None:
+            self.logger.info("Loading configuration from provided dictionary.")
+            self.__load_config_flat_dict(configuration_dict)
 
         # Check if the number of processors is valid
         if self.number_of_processors < 1:
@@ -184,6 +189,17 @@ class cfg:
         output = []
         for title, items in sections:
             output.append(f"{'-'*50}\n{title}:\n")
+
+            if title == "Database Information":
+                if len(self.data_info) == 0:
+                    output.append("No databases configured.\n")
+                    continue
+                for i, db in enumerate(self.data_info):
+                    output.append(f"Database index {i}:")
+                    for key, value in db.items():
+                        output.append(f"  {key}: {value}") 
+                continue
+
             output.extend(items)
 
         return "\n".join(output)
@@ -355,7 +371,10 @@ class cfg:
             self.logger.error(f"Error loading Excel file: {e}")
             raise Exception(f"Error loading Excel file: {e}")
         
-        
+        # Check if firs column has name "DATABASES" - if yes, load simple config
+        if df.columns[0].upper() == "DATABASES":
+            self.__load_config_xlsx_simple(config_file)
+            return
 
         # -------------- Query --------------
         query_table = df.iloc[0:2].dropna(how="all", axis=1).reset_index(drop=True)
@@ -485,6 +504,184 @@ class cfg:
             self.logger.warning("BLAST settings not found in the configuration file. Using default values.")
 
         self.logger.info("Configuration from xlsx file loaded successfully.")
+
+    def __load_config_xlsx_simple(self, config_file):
+        """
+        Load a simplified configuration from an Excel file. 
+
+        Note:
+            This method loads only the database paths and sequence column names from the 
+            specified Excel file, setting other parameters to default values. Query will be
+            passed manualy before running the analysis.
+        """
+
+        try:
+            df = pd.read_excel(config_file, sheet_name="Query")
+        except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {config_file}")
+            raise Exception(f"Configuration file not found: {config_file}")
+        except Exception as e:
+            self.logger.error(f"Error loading Excel file: {e}")
+            raise Exception(f"Error loading Excel file: {e}")
+        
+        df = df.dropna(how="all", axis=1).reset_index(drop=True)
+
+        if df.empty:
+            self.logger.critical("Databases table is empty. Please check your configuration file.")
+            raise Exception("Databases table is empty. Please check your configuration file.")
+        
+        for i in range(len(df)):
+            if pd.isnull(df["Path"][i]): break
+
+            
+            identifier_columns_values = df.iloc[i, 3:].dropna().tolist()
+
+            data = {
+                "path": df["Path"][i],
+                "sequence_column_name": df["Sequence_column"][i],
+                "results_column": df["Path"][i],
+                "identifier_of_seq": identifier_columns_values
+            }
+
+            self.data_info.append(data)
+
+        self.logger.info("Simplified configuration from xlsx file loaded successfully.")
+
+    def __load_config_flat_dict(self, config: dict) -> None:
+        """
+        Load configuration from a flat dict with keys like:
+        Query_path, Query_sequence_column, Number_of_processors,
+        Aligner_tolerance, Aligner_gap_score, Aligner_mismatch_score,
+        Aligner_match_score, Aligner_matrix, Aligner_mode,
+        Hamming_distance_max_distance,
+        Blast_e_value, Blast_name_of_created_database, Blast_output_name
+
+        Missing keys are ignored (defaults remain). Values are validated/coerced.
+        """
+        if not isinstance(config, dict):
+            raise Exception("configuration_dict must be a dict.")
+
+        def _coerce_int(val, name):
+            if val is None: return None
+            try: return int(val)
+            except Exception: 
+                msg = f"Expected int for '{name}', got '{val}'."
+                self.logger.error(msg); raise Exception(msg)
+
+        def _coerce_float(val, name):
+            if val is None: return None
+            try: return float(val)
+            except Exception:
+                msg = f"Expected float for '{name}', got '{val}'."
+                self.logger.error(msg); raise Exception(msg)
+
+        def _coerce_str(val, name):
+            if val is None: return None
+            try: return str(val)
+            except Exception:
+                msg = f"Expected str for '{name}', got '{val}'."
+                self.logger.error(msg); raise Exception(msg)
+
+        # ---------------- Query ----------------
+        q_path = config.get("Query_path")
+        q_seq_col = config.get("Query_sequence_column")
+        if q_path is not None:
+            self.input_file_path = _coerce_str(q_path, "Query_path")
+        if q_seq_col is not None:
+            q_seq_col = _coerce_str(q_seq_col, "Query_sequence_column")
+
+        if self.input_file_path or q_seq_col:
+            if not self.input_file_path:
+                raise Exception("Query_path is required if Query_sequence_column is provided.")
+            if not q_seq_col:
+                raise Exception("Query_sequence_column is required if Query_path is provided.")
+            self.input_file_info = {
+                "path": self.input_file_path,
+                "sequence_column_name": q_seq_col,
+                "starting_row": 0
+            }
+            self.logger.info(f"     Loaded query: path='{self.input_file_path}', sequence_column='{q_seq_col}'")
+
+        # ---------------- Settings ----------------
+        nproc = config.get("Number_of_processors")
+        if nproc is not None:
+            self.number_of_processors = _coerce_int(nproc, "Number_of_processors")
+            self.logger.info(f"     Set number_of_processors={self.number_of_processors}")
+
+        # ---------------- Aligner ----------------
+        tol = config.get("Aligner_tolerance")
+        if tol is not None:
+            self.tolerance = _coerce_float(tol, "Aligner_tolerance")
+            if not (0.0 <= self.tolerance <= 1.0):
+                raise Exception(f"Aligner_tolerance must be in [0,1], got {self.tolerance}")
+            self.logger.info(f"     Set SWA tolerance={self.tolerance}")
+
+        gap = config.get("Aligner_gap_score")
+        if gap is not None:
+            g = _coerce_float(gap, "Aligner_gap_score")
+            self.aligner.open_gap_score = g
+            self.aligner.extend_gap_score = g
+            self.logger.info(f"     Set SWA gap score (open/extend)={g}")
+
+        mismatch = config.get("Aligner_mismatch_score")
+        if mismatch is not None:
+            self.aligner.mismatch_score = _coerce_float(mismatch, "Aligner_mismatch_score")
+            self.logger.info(f"     Set SWA mismatch score={self.aligner.mismatch_score}")
+
+        match = config.get("Aligner_match_score")
+        if match is not None:
+            self.aligner.match_score = _coerce_float(match, "Aligner_match_score")
+            self.logger.info(f"     Set SWA match score={self.aligner.match_score}")
+
+        matrix_name = config.get("Aligner_matrix")
+        if matrix_name is not None:
+            if matrix_name in ("None", "", None):
+                # Explicitly skip matrix loading; keep match/mismatch settings
+                self.logger.info("      Aligner_matrix set to None — using match/mismatch scores.")
+            else:
+                try:
+                    self.aligner.substitution_matrix = Align.substitution_matrices.load(str(matrix_name))
+                    self.logger.info(f"     Loaded substitution matrix '{matrix_name}'.")
+                except Exception as e:
+                    msg = f"Failed to load substitution matrix '{matrix_name}': {e}"
+                    self.logger.error(msg); raise Exception(msg)
+
+        mode = config.get("Aligner_mode")
+        if mode is not None:
+            mode_l = _coerce_str(mode, "Aligner_mode").strip().lower()
+            if mode_l not in {"local", "global"}:
+                raise Exception("Aligner_mode must be 'global' or 'local'.")
+            self.aligner.mode = mode_l
+            self.logger.info(f"     Set SWA mode={self.aligner.mode}")
+
+        # ---------------- Hamming distance ----------------
+        hd = config.get("Hamming_distance_max_distance")
+        if hd is not None:
+            self.max_hamming_distance = _coerce_int(hd, "Hamming_distance_max_distance")
+            if self.max_hamming_distance < 0:
+                raise Exception("Hamming_distance_max_distance must be >= 0.")
+            self.logger.info(f"     Set max_hamming_distance={self.max_hamming_distance}")
+
+        # ---------------- BLAST ----------------
+        e_val = config.get("Blast_e_value")
+        if e_val is not None:
+            self.e_value = _coerce_float(e_val, "Blast_e_value")
+            self.logger.info(f"     Set BLAST e_value={self.e_value}")
+
+        db_name = config.get("Blast_name_of_created_database")
+        if db_name is not None:
+            self.blast_database_name = _coerce_str(db_name, "Blast_name_of_created_database")
+            self.logger.info(f"     Set BLAST database_name={self.blast_database_name}")
+
+        out_name = config.get("Blast_output_name")
+        if out_name is not None:
+            self.blast_output_name = _coerce_str(out_name, "Blast_output_name")
+            self.logger.info(f"     Set BLAST output_name={self.blast_output_name}")
+
+        # keep derived field in sync
+        self.blast_database_full_name = self.blast_database_path + "//" + self.blast_database_name
+
+        self.logger.info("Configuration loaded from flat dict successfully.")
 
     def __load_input_df(self):
         """

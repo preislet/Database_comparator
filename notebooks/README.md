@@ -16,12 +16,14 @@ with the following workaround:
 ```python
 import pandas as pd
 import numpy as np
-import os
-import sys
-# Get the absolute path of the project root directory
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# open folder Database_comparator
-sys.path.append(project_root)
+
+import sys, pathlib
+# Start from the current working directory of the notebook/REPL
+BASE = pathlib.Path().resolve()              # same as pathlib.Path.cwd()
+PARENT = (BASE / "..").resolve()             # adjust if needed
+
+sys.path.append(str(PARENT))
+from Database_comparator import db_compare
 
 # Now you can import db_compare
 import Database_comparator.db_compare as db_compare
@@ -33,4 +35,4 @@ This modification will work only if youac run the notebooks from the `notebooks`
 
 ## ⚠️ Recommendation
 
-To avoid setup issues and ensure a smoother experience, we strongly recommend using the Docker image provided with this project.
+To avoid setup issues and ensure a smoother experience, we strongly recommend using the Docker image provided with this project. The docker image and notebooks are designed to work with Simple configuration files, making it easier to get started without additional setup. All advanced settings can be configured directly in the notebooks.
