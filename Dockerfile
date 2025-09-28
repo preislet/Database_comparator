@@ -1,6 +1,6 @@
 FROM jupyter/datascience-notebook:python-3.11
 
-# Nastav pracovní adresář
+# Nastav pracovní adresář v rámci kontejneru
 WORKDIR /home/database_comparator
 
 # Zkopíruj projektové složky a README
